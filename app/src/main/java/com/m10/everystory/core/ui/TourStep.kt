@@ -4,6 +4,7 @@ package com.m10.everystory.core.ui
 enum class TourStep {
     Search,
     TextSize,
+    Language,
     Topics,
     LeadStory,
     Saved,

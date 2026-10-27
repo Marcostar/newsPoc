@@ -13,17 +13,21 @@ import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.repository.NewsRepository
+import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Instant
 
 class TodayViewModel(
     private val newsRepository: NewsRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val analytics: AnalyticsTracker,
     private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -36,7 +40,29 @@ class TodayViewModel(
     private var currentPage = 0
 
     init {
-        loadFirstPage()
+        // The first value starts the feed; a new language later starts it over on All.
+        // distinctUntilChanged because DataStore re-emits when any other preference changes.
+        viewModelScope.launch {
+            userPreferencesRepository.newsLanguage.distinctUntilChanged().collect { language ->
+                _uiState.update {
+                    it.copy(
+                        newsLanguage = language,
+                        selectedCategory = null,
+                        articles = emptyList(),
+                        feedStatus = FeedStatus.Loading,
+                        lastRefresh = null,
+                        loadMore = LoadMoreState.Idle,
+                    )
+                }
+                loadFirstPage()
+            }
+        }
+    }
+
+    fun onLanguageSelected(language: NewsLanguage) {
+        if (language == _uiState.value.newsLanguage) return
+        analytics.log(AnalyticsEvent.LanguageChange(language))
+        viewModelScope.launch { userPreferencesRepository.setNewsLanguage(language) }
     }
 
     fun onCategorySelected(category: NewsCategory?) {
@@ -71,7 +97,7 @@ class TodayViewModel(
         _uiState.update { it.copy(isRefreshing = true, loadMore = it.loadMore.settled()) }
 
         feedJob = viewModelScope.launch {
-            when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory)) {
+            when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory, language = state.newsLanguage)) {
                 is AppResult.Success -> {
                     val newStories = result.data.articles.count { it.key !in previousKeys }
                     showFirstPage(result.data, RefreshOutcome.Updated(newStories))
@@ -93,7 +119,7 @@ class TodayViewModel(
         val nextPage = currentPage + 1
         _uiState.update { it.copy(loadMore = LoadMoreState.Loading) }
         loadMoreJob = viewModelScope.launch {
-            when (val result = newsRepository.topHeadlines(page = nextPage, category = state.selectedCategory)) {
+            when (val result = newsRepository.topHeadlines(page = nextPage, category = state.selectedCategory, language = state.newsLanguage)) {
                 is AppResult.Success -> {
                     currentPage = nextPage
                     _uiState.update {
@@ -119,9 +145,9 @@ class TodayViewModel(
 
     private fun loadFirstPage() {
         cancelLoading()
-        val category = _uiState.value.selectedCategory
+        val state = _uiState.value
         feedJob = viewModelScope.launch {
-            when (val result = newsRepository.topHeadlines(page = 1, category = category)) {
+            when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory, language = state.newsLanguage)) {
                 is AppResult.Success -> showFirstPage(result.data, refresh = null)
                 is AppResult.Failure -> {
                     analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Today, result.error))
@@ -163,7 +189,11 @@ class TodayViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as EveryStoryApplication
-                TodayViewModel(app.container.newsRepository, app.container.analyticsTracker)
+                TodayViewModel(
+                    newsRepository = app.container.newsRepository,
+                    userPreferencesRepository = app.container.userPreferencesRepository,
+                    analytics = app.container.analyticsTracker,
+                )
             }
         }
     }

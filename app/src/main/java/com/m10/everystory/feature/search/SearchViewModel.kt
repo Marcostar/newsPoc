@@ -13,13 +13,16 @@ import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
+import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -30,6 +33,7 @@ private const val QUERY_KEY = "query"
 class SearchViewModel(
     private val newsRepository: NewsRepository,
     private val recentSearchesRepository: RecentSearchesRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val analytics: AnalyticsTracker,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -40,6 +44,9 @@ class SearchViewModel(
     private var searchJob: Job? = null
     private var loadMoreJob: Job? = null
     private var currentPage = 0
+
+    // Searches in the news language chosen on Today; later pages stay in the language of page one.
+    private var searchedLanguage = NewsLanguage.Default
 
     init {
         viewModelScope.launch {
@@ -109,7 +116,7 @@ class SearchViewModel(
         val nextPage = currentPage + 1
         _uiState.update { it.copy(loadMore = LoadMoreState.Loading) }
         loadMoreJob = viewModelScope.launch {
-            when (val result = newsRepository.searchArticles(query = query, page = nextPage)) {
+            when (val result = newsRepository.searchArticles(query = query, page = nextPage, language = searchedLanguage)) {
                 is AppResult.Success -> {
                     currentPage = nextPage
                     _uiState.update {
@@ -147,7 +154,8 @@ class SearchViewModel(
                 loadMore = LoadMoreState.Idle,
             )
         }
-        when (val result = newsRepository.searchArticles(query = query, page = 1)) {
+        searchedLanguage = userPreferencesRepository.newsLanguage.first()
+        when (val result = newsRepository.searchArticles(query = query, page = 1, language = searchedLanguage)) {
             is AppResult.Success -> {
                 currentPage = 1
                 _uiState.update {
@@ -177,6 +185,7 @@ class SearchViewModel(
                 SearchViewModel(
                     newsRepository = app.container.newsRepository,
                     recentSearchesRepository = app.container.recentSearchesRepository,
+                    userPreferencesRepository = app.container.userPreferencesRepository,
                     analytics = app.container.analyticsTracker,
                     savedStateHandle = createSavedStateHandle(),
                 )

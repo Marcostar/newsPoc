@@ -70,7 +70,7 @@
     <string name="story_missing_title">This story isn’t available</string>
     <string name="story_missing_body">It has dropped out of the news we keep on your phone. Go back for the latest stories.</string>
 
-    <string name="status_updated">Updated %1$s</string>
+    <string name="status_updated">Updated %1$s · %2$s</string>
     <string name="status_refreshing">Checking for new stories…</string>
     <plurals name="status_new_stories">
         <item quantity="one">Updated %1$s · %2$d new</item>
@@ -130,6 +130,21 @@
     <string name="display_theme">Theme</string>
     <string name="display_done">Done</string>
 
+    <!-- News language -->
+    <string name="language_title">News language</string>
+    <string name="language_note">Menus stay in your phone\'s language.</string>
+    <string name="language_close_description">Close news language</string>
+    <string name="language_button_description">News language: %1$s</string>
+    <string name="language_detail_rtl">%1$s · right to left</string>
+    <string name="language_native_en" translatable="false">English</string>
+    <string name="language_native_de" translatable="false">Deutsch</string>
+    <string name="language_native_fr" translatable="false">Français</string>
+    <string name="language_native_ar" translatable="false">العربية</string>
+    <string name="language_english_en">English</string>
+    <string name="language_english_de">German</string>
+    <string name="language_english_fr">French</string>
+    <string name="language_english_ar">Arabic</string>
+
     <!-- App tour -->
     <plurals name="you_tour_detail">
         <item quantity="one">%1$d quick tip on Today · about 30 seconds</item>
@@ -149,6 +164,8 @@
     <string name="tour_search_text">Find any story by keyword, place or person. Results start as you type.</string>
     <string name="tour_text_size_title">Make the text comfortable</string>
     <string name="tour_text_size_text">Aa changes the text size and theme, like a reading app. It works on every screen.</string>
+    <string name="tour_language_title">Read news in another language</string>
+    <string name="tour_language_text">Switch the news to German, French or Arabic. Menus stay in your phone\'s language.</string>
     <string name="tour_topics_title">Pick a topic</string>
     <string name="tour_topics_text">Narrow Today to business, health, science, sports, tech or entertainment.</string>
     <string name="tour_story_title">Open a story</string>

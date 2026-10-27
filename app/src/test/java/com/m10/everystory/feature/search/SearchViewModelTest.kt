@@ -5,9 +5,11 @@ import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeRecentSearchesRepository
+import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testPage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,9 +31,10 @@ class SearchViewModelTest {
     private val news = FakeNewsRepository()
     private val recent = FakeRecentSearchesRepository()
     private val analytics = FakeAnalyticsTracker()
+    private val preferences = FakeUserPreferencesRepository()
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-        SearchViewModel(news, recent, analytics, savedState)
+        SearchViewModel(news, recent, preferences, analytics, savedState)
 
     @Test
     fun `typing waits for a pause before searching`() = runTest {
@@ -208,5 +211,18 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(AnalyticsEvent.Search("levee")), analytics.events)
+    }
+
+    @Test
+    fun `search uses the news language chosen on Today`() = runTest {
+        preferences.setNewsLanguage(NewsLanguage.French)
+        news.searchResults += testPage(1, listOf("a"))
+        val viewModel = createViewModel()
+
+        viewModel.onQueryChange("climat")
+        viewModel.onSubmit()
+        advanceUntilIdle()
+
+        assertEquals(listOf(NewsLanguage.French), news.searchLanguages)
     }
 }

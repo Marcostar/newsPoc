@@ -24,6 +24,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -54,11 +57,14 @@ import com.m10.everystory.core.ui.LoadMoreWhenNearEnd
 import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.clockTimeText
+import com.m10.everystory.core.ui.nativeNameRes
 import com.m10.everystory.core.ui.toErrorMessage
 import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.ArticleSource
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.feature.today.component.LanguageButton
+import com.m10.everystory.feature.today.component.LanguageSheet
 import java.time.Duration
 import java.time.Instant
 
@@ -86,10 +92,12 @@ fun TodayRoute(
     LaunchedEffect(isTourRunning) {
         if (isTourRunning) listState.scrollToItem(0)
     }
+    var showLanguageSheet by rememberSaveable { mutableStateOf(false) }
     TodayScreen(
         uiState = uiState,
         onSearchClick = onSearchClick,
         onAaClick = onAaClick,
+        onLanguageClick = { showLanguageSheet = true },
         onArticleClick = onArticleClick,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
@@ -98,6 +106,13 @@ fun TodayRoute(
         onCategorySelected = viewModel::onCategorySelected,
         listState = listState,
     )
+    if (showLanguageSheet) {
+        LanguageSheet(
+            selected = uiState.newsLanguage,
+            onSelect = viewModel::onLanguageSelected,
+            onDismiss = { showLanguageSheet = false },
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,6 +121,7 @@ fun TodayScreen(
     uiState: TodayUiState,
     onSearchClick: () -> Unit,
     onAaClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
@@ -125,6 +141,11 @@ fun TodayScreen(
                 .padding(start = EsSpace.screen, end = EsSpace.s8, top = EsSpace.s4),
         ) {
             EsLogoLockup(modifier = Modifier.weight(1f))
+            LanguageButton(
+                language = uiState.newsLanguage,
+                onClick = onLanguageClick,
+                modifier = Modifier.tourTarget(tourTargets, TourStep.Language),
+            )
             EsAaButton(onClick = onAaClick, modifier = Modifier.tourTarget(tourTargets, TourStep.TextSize))
         }
         EsSearchBarButton(
@@ -278,7 +299,7 @@ private fun statusLine(uiState: TodayUiState): String? {
     if (uiState.isRefreshing) return stringResource(R.string.status_refreshing)
     val updated = uiState.updatedAt?.let(::clockTimeText) ?: return null
     return when (val refresh = uiState.lastRefresh) {
-        null -> stringResource(R.string.status_updated, updated)
+        null -> stringResource(R.string.status_updated, updated, stringResource(uiState.newsLanguage.nativeNameRes()))
         is RefreshOutcome.Updated ->
             if (refresh.newStories > 0) {
                 pluralStringResource(R.plurals.status_new_stories, refresh.newStories, updated, refresh.newStories)
@@ -340,6 +361,7 @@ private fun TodayScreenPreview() {
             ),
             onSearchClick = {},
             onAaClick = {},
+            onLanguageClick = {},
             onArticleClick = {},
             onRefresh = {},
             onRetry = {},

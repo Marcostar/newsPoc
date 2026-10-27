@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.m10.everystory.R
@@ -32,11 +33,23 @@ val Atkinson = FontFamily(
     variableFont(R.font.atkinson_hyperlegible_next, FontWeight.Bold),
 )
 
-private fun serif(size: Int, line: Int, weight: FontWeight = FontWeight.Medium) =
-    TextStyle(fontFamily = Newsreader, fontWeight = weight, fontSize = size.sp, lineHeight = line.sp)
+// Every paragraph takes its direction from its own script, so an Arabic headline reads right to
+// left in an English layout while the menus around it stay put.
+private fun serif(size: Int, line: Int, weight: FontWeight = FontWeight.Medium) = TextStyle(
+    fontFamily = Newsreader,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = line.sp,
+    textDirection = TextDirection.Content,
+)
 
-private fun sans(size: Int, line: Int, weight: FontWeight = FontWeight.Normal) =
-    TextStyle(fontFamily = Atkinson, fontWeight = weight, fontSize = size.sp, lineHeight = line.sp)
+private fun sans(size: Int, line: Int, weight: FontWeight = FontWeight.Normal) = TextStyle(
+    fontFamily = Atkinson,
+    fontWeight = weight,
+    fontSize = size.sp,
+    lineHeight = line.sp,
+    textDirection = TextDirection.Content,
+)
 
 val EsTypography = Typography(
     displaySmall = serif(34, 40).copy(letterSpacing = (-0.01).em), // "Today"
@@ -60,5 +73,6 @@ object EsType {
         fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
         fontSize = 17.sp,
         lineHeight = (17 * spacing).sp,
+        textDirection = TextDirection.Content,
     )
 }

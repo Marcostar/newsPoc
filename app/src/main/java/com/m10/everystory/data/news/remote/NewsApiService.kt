@@ -7,10 +7,12 @@ import retrofit2.http.Query
 
 interface NewsApiService {
 
+    // Retrofit leaves null params out. NewsAPI refuses sources mixed with category or language.
     @GET("top-headlines")
     suspend fun topHeadlines(
-        @Query("language") language: String,
+        @Query("language") language: String?,
         @Query("category") category: String?,
+        @Query("sources") sources: String?,
         @Query("page") page: Int,
         @Query("pageSize") pageSize: Int,
     ): ArticlesResponseDto

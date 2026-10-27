@@ -48,7 +48,7 @@ class TourViewModelTest {
         assertEquals(TourStep.Search, viewModel.uiState.value.step)
         viewModel.onNext()
         viewModel.onNext()
-        assertEquals(TourStep.Topics, viewModel.uiState.value.step)
+        assertEquals(TourStep.Language, viewModel.uiState.value.step)
         viewModel.onBack()
         assertEquals(TourStep.TextSize, viewModel.uiState.value.step)
     }

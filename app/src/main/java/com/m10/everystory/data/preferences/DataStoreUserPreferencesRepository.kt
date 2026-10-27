@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.TextSize
 import com.m10.everystory.domain.model.ThemeSetting
 import com.m10.everystory.domain.repository.UserPreferencesRepository
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
 
 private val THEME_SETTING = stringPreferencesKey("theme_setting")
 private val TEXT_SIZE_STEP = intPreferencesKey("text_size_step")
+private val NEWS_LANGUAGE = stringPreferencesKey("news_language")
 private val TOUR_SEEN = booleanPreferencesKey("tour_seen")
 
 class DataStoreUserPreferencesRepository(
@@ -35,6 +37,15 @@ class DataStoreUserPreferencesRepository(
 
     override suspend fun setTextSizeStep(step: Int) {
         dataStore.edit { it[TEXT_SIZE_STEP] = step.coerceIn(TextSize.scales.indices) }
+    }
+
+    // Stored as NewsAPI's code; a language dropped from the list falls back to English.
+    override val newsLanguage: Flow<NewsLanguage> = dataStore.data.map { prefs ->
+        NewsLanguage.fromCode(prefs[NEWS_LANGUAGE])
+    }
+
+    override suspend fun setNewsLanguage(language: NewsLanguage) {
+        dataStore.edit { it[NEWS_LANGUAGE] = language.code }
     }
 
     override val tourSeen: Flow<Boolean> = dataStore.data.map { prefs -> prefs[TOUR_SEEN] ?: false }

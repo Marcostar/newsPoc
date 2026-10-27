@@ -3,6 +3,7 @@ package com.m10.everystory.core.analytics
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.TextSize
 import com.m10.everystory.domain.model.ThemeSetting
 import kotlin.math.roundToInt
@@ -44,6 +45,9 @@ sealed class AnalyticsEvent(
     // Sent as a percentage (85–160) so reports read naturally.
     data class TextSizeChange(val step: Int) :
         AnalyticsEvent("text_size_change", mapOf("text_size" to (TextSize.scaleOf(step) * 100).roundToInt().toString()))
+
+    data class LanguageChange(val language: NewsLanguage) :
+        AnalyticsEvent("language_change", mapOf("language" to language.code))
 
     data object TourComplete : AnalyticsEvent("tour_complete")
 

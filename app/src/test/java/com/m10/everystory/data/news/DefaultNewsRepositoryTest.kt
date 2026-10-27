@@ -6,6 +6,7 @@ import com.m10.everystory.data.news.local.ArticleEntity
 import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.testing.FakeArticleDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -194,6 +195,42 @@ class DefaultNewsRepositoryTest {
         .setResponseCode(code)
         .setBody("""{"status":"error","code":"$apiCode","message":"test"}""")
 
+    @Test
+    fun `other languages read headlines from that language's outlets`() = runTest {
+        server.enqueue(MockResponse().setBody(GERMAN_SOURCES_JSON))
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        repository.topHeadlines(page = 1, language = NewsLanguage.German).successValue()
+        repository.topHeadlines(page = 2, language = NewsLanguage.German).successValue()
+
+        val sourcesRequest = server.takeRequest()
+        assertEquals("/v2/top-headlines/sources", sourcesRequest.requestUrl?.encodedPath)
+        assertEquals("de", sourcesRequest.requestUrl?.queryParameter("language"))
+        // NewsAPI refuses sources mixed with language or category, so only sources is sent.
+        val headlines = server.takeRequest().requestUrl
+        assertEquals("/v2/top-headlines", headlines?.encodedPath)
+        assertEquals("spiegel-online,die-zeit", headlines?.queryParameter("sources"))
+        assertNull(headlines?.queryParameter("language"))
+        assertNull(headlines?.queryParameter("category"))
+        // Page two reuses the outlet list instead of asking again.
+        assertEquals("/v2/top-headlines", server.takeRequest().requestUrl?.encodedPath)
+        assertEquals(3, server.requestCount)
+    }
+
+    @Test
+    fun `a topic with no outlets in that language is an empty last page`() = runTest {
+        server.enqueue(MockResponse().setBody("""{"status": "ok", "sources": []}"""))
+
+        val page = repository.topHeadlines(page = 1, category = NewsCategory.Science, language = NewsLanguage.Arabic)
+            .successValue()
+
+        assertTrue(page.articles.isEmpty())
+        assertTrue(page.isLastPage)
+        assertEquals("science", server.takeRequest().requestUrl?.queryParameter("category"))
+        assertEquals(1, server.requestCount)
+    }
+
     private fun AppResult<ArticlePage>.successValue(): ArticlePage =
         (this as? AppResult.Success)?.data ?: error("Expected success but was $this")
 
@@ -201,6 +238,13 @@ class DefaultNewsRepositoryTest {
         (this as? AppResult.Failure)?.error ?: error("Expected failure but was $this")
 
     private companion object {
+        val GERMAN_SOURCES_JSON = """
+            {"status": "ok", "sources": [
+              {"id": "spiegel-online", "name": "Spiegel Online", "category": "general", "language": "de", "country": "de"},
+              {"id": "die-zeit", "name": "Die Zeit", "category": "business", "language": "de", "country": "de"}
+            ]}
+        """.trimIndent()
+
         val HEADLINES_JSON = """
             {
               "status": "ok",

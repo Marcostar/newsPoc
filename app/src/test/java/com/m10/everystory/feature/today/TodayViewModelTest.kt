@@ -6,8 +6,10 @@ import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
+import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testPage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,9 +30,10 @@ class TodayViewModelTest {
 
     private val repository = FakeNewsRepository()
     private val analytics = FakeAnalyticsTracker()
+    private val preferences = FakeUserPreferencesRepository()
     private val fixedNow = Instant.parse("2026-10-26T09:30:00Z")
 
-    private fun createViewModel() = TodayViewModel(repository, analytics, now = { fixedNow })
+    private fun createViewModel() = TodayViewModel(repository, preferences, analytics, now = { fixedNow })
 
     @Test
     fun `first load shows headlines and ends the launch screen`() = runTest {
@@ -178,5 +181,39 @@ class TodayViewModelTest {
             ),
             analytics.events,
         )
+    }
+
+    @Test
+    fun `choosing a language saves it and reloads page one on All in that language`() = runTest {
+        repository.headlineResults += testPage(1, listOf("a"))
+        repository.headlineResults += testPage(1, listOf("h"))
+        repository.headlineResults += testPage(1, listOf("d"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onCategorySelected(NewsCategory.Health)
+        advanceUntilIdle()
+
+        viewModel.onLanguageSelected(NewsLanguage.German)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(NewsLanguage.German, state.newsLanguage)
+        assertEquals(null, state.selectedCategory)
+        assertEquals(listOf("d"), state.articles.map { it.key })
+        assertEquals(1 to null, repository.headlineRequests.last())
+        assertEquals(NewsLanguage.German, repository.headlineLanguages.last())
+        assertTrue(AnalyticsEvent.LanguageChange(NewsLanguage.German) in analytics.events)
+    }
+
+    @Test
+    fun `another preference changing does not reload the feed`() = runTest {
+        repository.headlineResults += testPage(1, listOf("a"))
+        createViewModel()
+        advanceUntilIdle()
+
+        preferences.setTextSizeStep(5)
+        advanceUntilIdle()
+
+        assertEquals(1, repository.headlineRequests.size)
     }
 }

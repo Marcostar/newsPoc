@@ -14,18 +14,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -33,10 +30,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
+import com.m10.everystory.core.designsystem.component.EsBottomSheet
 import com.m10.everystory.core.designsystem.component.EsSegmentedControl
 import com.m10.everystory.core.designsystem.icon.EsIcons
 import com.m10.everystory.core.designsystem.theme.EsRadius
@@ -65,26 +62,15 @@ fun TextAndDisplaySheet(
         scope.launch { sheetState.hide() }.invokeOnCompletion { onDismiss() }
     }
 
-    // The sheet opens in its own window, which starts from the phone's density and loses the
-    // theme's text scale. Hand it the app's density so the preview grows as the size changes.
-    val appDensity = LocalDensity.current
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        shape = EsRadius.sheet,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 0.dp,
-    ) {
-        CompositionLocalProvider(LocalDensity provides appDensity) {
-            TextAndDisplayContent(
-                uiState = uiState,
-                onTextSizeChange = viewModel::onTextSizeChange,
-                onThemeSelected = viewModel::onThemeSelected,
-                onReset = viewModel::onReset,
-                onClose = close,
-            )
-        }
+    // EsBottomSheet carries the app's text size into the sheet, so the preview grows live.
+    EsBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        TextAndDisplayContent(
+            uiState = uiState,
+            onTextSizeChange = viewModel::onTextSizeChange,
+            onThemeSelected = viewModel::onThemeSelected,
+            onReset = viewModel::onReset,
+            onClose = close,
+        )
     }
 }
 

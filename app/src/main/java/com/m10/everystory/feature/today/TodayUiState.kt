@@ -4,11 +4,13 @@ import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.NewsLanguage
 import java.time.Instant
 
 data class TodayUiState(
     // True until the very first load finishes; drives the branded launch screen.
     val isLaunching: Boolean = true,
+    val newsLanguage: NewsLanguage = NewsLanguage.Default,
     val selectedCategory: NewsCategory? = null,
     val articles: List<Article> = emptyList(),
     val feedStatus: FeedStatus = FeedStatus.Loading,
