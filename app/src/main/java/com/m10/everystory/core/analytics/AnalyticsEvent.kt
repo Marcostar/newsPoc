@@ -65,6 +65,9 @@ sealed class AnalyticsEvent(
 
     data object TourComplete : AnalyticsEvent("tour_complete")
 
+    // Someone found the easter egg behind the version row.
+    data object ProfileOpen : AnalyticsEvent("profile_open")
+
     // Which tip people give up on says more than the skip itself.
     data class TourSkip(val step: TourStep) :
         AnalyticsEvent("tour_skip", mapOf("step" to (step.ordinal + 1).toString()))

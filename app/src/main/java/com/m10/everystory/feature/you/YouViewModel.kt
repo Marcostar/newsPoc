@@ -35,6 +35,10 @@ class YouViewModel(
         viewModelScope.launch { userPreferencesRepository.setThemeSetting(setting) }
     }
 
+    fun onProfileOpened() {
+        analytics.log(AnalyticsEvent.ProfileOpen)
+    }
+
     companion object {
         private const val STOP_TIMEOUT_MS = 5_000L
 

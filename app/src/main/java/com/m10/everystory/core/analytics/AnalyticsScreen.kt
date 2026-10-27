@@ -9,4 +9,5 @@ enum class AnalyticsScreen(val value: String) {
     You("you"),
     DataUsage("data_usage"),
     Developer("developer"),
+    Profile("profile"),
 }

@@ -22,6 +22,7 @@ import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalSharedTransitionScope
 import com.m10.everystory.feature.datausage.DataUsageRoute
 import com.m10.everystory.feature.developer.DeveloperSettingsRoute
+import com.m10.everystory.feature.profile.ProfileRoute
 import com.m10.everystory.feature.saved.SavedRoute
 import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.story.StoryRoute
@@ -86,7 +87,11 @@ fun EsNavHost(
                         },
                         onOpenDisplaySettings = onOpenDisplaySettings,
                         onOpenDataUsage = { navController.navigate(DataUsageDestination) },
+                        onOpenProfile = { navController.navigate(ProfileDestination) { launchSingleTop = true } },
                     )
+                }
+                composable<ProfileDestination> {
+                    ProfileRoute(onBack = { navController.popBackStack() })
                 }
                 composable<DeveloperDestination> {
                     DeveloperSettingsRoute(

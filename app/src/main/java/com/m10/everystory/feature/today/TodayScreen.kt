@@ -1,7 +1,5 @@
 package com.m10.everystory.feature.today
 
-import android.os.SystemClock
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,12 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -64,6 +60,7 @@ import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.ui.clockTimeText
+import com.m10.everystory.core.ui.onTripleTap
 import com.m10.everystory.core.ui.nativeNameRes
 import com.m10.everystory.core.ui.toErrorMessage
 import com.m10.everystory.core.ui.tourTarget
@@ -153,10 +150,8 @@ fun TodayScreen(
                 .heightIn(min = EsSize.minTarget)
                 .padding(start = EsSpace.screen, end = EsSpace.s8, top = EsSpace.s4),
         ) {
-            // Keyed once, so a recomposition between taps doesn't reset the count.
-            val currentOnLogoTripleTap by rememberUpdatedState(onLogoTripleTap)
             Box(modifier = Modifier.weight(1f)) {
-                EsLogoLockup(modifier = Modifier.onTripleTap { currentOnLogoTripleTap() })
+                EsLogoLockup(modifier = Modifier.onTripleTap(onLogoTripleTap))
             }
             LanguageButton(
                 language = uiState.newsLanguage,
@@ -286,23 +281,6 @@ private fun LazyListScope.feedItems(
 // Stories from earlier are still showing, but the reader's own key was just turned down.
 private fun TodayUiState.ownKeyRefreshRejected(): Boolean =
     usingOwnKey && (lastRefresh as? RefreshOutcome.Failed)?.error == AppError.Unauthorized
-
-// The developer settings easter egg (handoff): three taps on the name within 700ms of each other.
-private const val TRIPLE_TAP_WINDOW_MS = 700L
-
-private fun Modifier.onTripleTap(onTripleTap: () -> Unit): Modifier = pointerInput(Unit) {
-    var taps = 0
-    var lastTapAt = 0L
-    detectTapGestures {
-        val now = SystemClock.uptimeMillis()
-        taps = if (now - lastTapAt < TRIPLE_TAP_WINDOW_MS) taps + 1 else 1
-        lastTapAt = now
-        if (taps == 3) {
-            taps = 0
-            onTripleTap()
-        }
-    }
-}
 
 @Composable
 private fun TodayHeading(uiState: TodayUiState, onRefresh: () -> Unit) {

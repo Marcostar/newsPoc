@@ -51,6 +51,8 @@ object EsSize {
     val usageBar = 8.dp
     val outlineButton = 1.5.dp // Listen's pill border
     val playerProgress = 4.dp
+    val profileAvatar = 96.dp
+    val confettiPiece = 8.dp
 }
 
 object EsRadius {

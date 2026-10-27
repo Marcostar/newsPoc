@@ -25,6 +25,54 @@
     <string name="theme_system">System</string>
     <string name="you_about">About</string>
     <string name="you_version">Version %1$s (build %2$d)</string>
+
+    <!-- Profile page: the easter egg behind the version row. Fill in the details; an empty link hides its tile. -->
+    <string name="profile_eyebrow">You found the maker</string>
+    <!-- TalkBack can't triple-tap, so the version row offers this as an action instead. -->
+    <string name="profile_action">Meet the maker</string>
+    <string name="profile_name" translatable="false">Sagar Ghadge</string>
+    <string name="profile_role">Android developer</string>
+    <string name="profile_avatar_description">Say hello</string>
+    <string name="profile_photo_caption">At the Sydney Cricket Ground</string>
+    <string name="profile_photo_description">Sagar kneeling on the outfield at the Sydney Cricket Ground, with the empty stands behind</string>
+    <string-array name="profile_greetings">
+        <item>Hi!</item>
+        <item>Hallo!</item>
+        <item>Bonjour !</item>
+        <item>مرحبا!</item>
+    </string-array>
+    <string name="profile_intro">Funny, fluent in sarcasm, a movie lover and a cricket fan. I also build Android apps.</string>
+    <string name="profile_facts_title">Fun facts</string>
+    <string name="profile_fact_count">Fact %1$d of %2$d</string>
+    <string name="profile_next_fact">Another one</string>
+    <string-array name="profile_facts">
+        <item>Next year I’m doing a half Ironman in Oregon.</item>
+        <item>I’m left-handed.</item>
+        <item>I get scared watching horror movies.</item>
+    </string-array>
+    <string name="profile_interests_title">Things I’m into</string>
+    <string-array name="profile_interests">
+        <item>Stock trading</item>
+        <item>Outdoor activities</item>
+        <item>Tiny homes</item>
+        <item>Exploring food</item>
+    </string-array>
+    <string name="profile_believe_title">I believe</string>
+    <string name="profile_quote_mark" translatable="false">“</string>
+    <string name="profile_believe">I am because we are.</string>
+    <string name="profile_believe_source">Ubuntu</string>
+    <string name="profile_links_title">Say hello</string>
+    <string name="profile_portfolio">Portfolio</string>
+    <string name="profile_linkedin">LinkedIn</string>
+    <string name="profile_github">GitHub</string>
+    <string name="profile_email">Email me</string>
+    <string name="profile_link_description">%1$s, opens in browser</string>
+    <string name="profile_email_description">Email me, opens your email app</string>
+    <string name="profile_hint">Tap the version number three times to find this again.</string>
+    <string name="profile_url_portfolio" translatable="false"></string>
+    <string name="profile_url_linkedin" translatable="false">https://www.linkedin.com/in/sagar-ghadge/</string>
+    <string name="profile_url_github" translatable="false">https://github.com/Marcostar</string>
+    <string name="profile_email_address" translatable="false">sagarghadge24@gmail.com</string>
     <string name="you_news_source">News from NewsAPI.org</string>
     <string name="you_news_source_detail">Headlines and search results come from NewsAPI.</string>
     <string name="you_news_source_description">News from NewsAPI.org, opens in browser</string>

@@ -23,8 +23,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -39,9 +41,10 @@ import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.core.designsystem.theme.EsTheme
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
-import com.m10.everystory.core.ui.labelRes
-import com.m10.everystory.core.ui.openInCustomTab
 import com.m10.everystory.core.ui.TourStep
+import com.m10.everystory.core.ui.labelRes
+import com.m10.everystory.core.ui.onTripleTap
+import com.m10.everystory.core.ui.openInCustomTab
 import com.m10.everystory.core.ui.themeOptions
 import com.m10.everystory.domain.model.ThemeSetting
 
@@ -53,6 +56,7 @@ fun YouRoute(
     onStartTour: () -> Unit,
     onOpenDisplaySettings: () -> Unit,
     onOpenDataUsage: () -> Unit,
+    onOpenProfile: () -> Unit,
     viewModel: YouViewModel = viewModel(factory = YouViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -68,6 +72,10 @@ fun YouRoute(
         onOpenDisplaySettings = onOpenDisplaySettings,
         onOpenDataUsage = onOpenDataUsage,
         onNewsApiClick = { context.openInCustomTab(NEWS_API_URL, toolbarColor) },
+        onVersionTripleTap = {
+            viewModel.onProfileOpened()
+            onOpenProfile()
+        },
     )
 }
 
@@ -83,6 +91,7 @@ fun YouScreen(
     onOpenDataUsage: () -> Unit,
     onNewsApiClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onVersionTripleTap: () -> Unit = {},
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         YouHeader(onClose = onClose)
@@ -126,10 +135,16 @@ fun YouScreen(
             )
 
             SectionLabel(stringResource(R.string.you_about))
+            val meetTheMaker = stringResource(R.string.profile_action)
             AboutRow(
                 icon = EsIcons.Info,
                 title = stringResource(R.string.app_name),
                 subtitle = stringResource(R.string.you_version, versionName, versionCode),
+                modifier = Modifier
+                    .onTripleTap(onVersionTripleTap)
+                    .semantics {
+                        customActions = listOf(CustomAccessibilityAction(meetTheMaker) { onVersionTripleTap(); true })
+                    },
             )
             AboutRow(
                 icon = EsIcons.OpenInNew,
@@ -192,6 +207,7 @@ private fun AboutRow(
     icon: ImageVector,
     title: String,
     subtitle: String,
+    modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     clickDescription: String? = null,
 ) {
@@ -203,7 +219,7 @@ private fun AboutRow(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(EsSpace.s12),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = EsSize.primaryButton)
             .then(clickModifier)

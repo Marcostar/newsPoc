@@ -37,4 +37,13 @@ class YouViewModelTest {
         assertEquals(ThemeSetting.Dark, viewModel.uiState.value.themeSetting)
         assertEquals(listOf(AnalyticsEvent.ThemeChange(ThemeSetting.Dark)), analytics.events)
     }
+
+    @Test
+    fun `finding the profile is logged`() {
+        val viewModel = YouViewModel(preferences, analytics)
+
+        viewModel.onProfileOpened()
+
+        assertEquals(listOf(AnalyticsEvent.ProfileOpen), analytics.events)
+    }
 }

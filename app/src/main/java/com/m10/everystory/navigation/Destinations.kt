@@ -27,6 +27,10 @@ data object DataUsageDestination
 @Serializable
 data object DeveloperDestination
 
+// Hidden: opened by tapping the version on You three times.
+@Serializable
+data object ProfileDestination
+
 fun NavDestination.analyticsScreen(): AnalyticsScreen? = when {
     hasRoute<TodayDestination>() -> AnalyticsScreen.Today
     hasRoute<SavedDestination>() -> AnalyticsScreen.Saved
@@ -35,5 +39,6 @@ fun NavDestination.analyticsScreen(): AnalyticsScreen? = when {
     hasRoute<StoryDestination>() -> AnalyticsScreen.Story
     hasRoute<DataUsageDestination>() -> AnalyticsScreen.DataUsage
     hasRoute<DeveloperDestination>() -> AnalyticsScreen.Developer
+    hasRoute<ProfileDestination>() -> AnalyticsScreen.Profile
     else -> null
 }
