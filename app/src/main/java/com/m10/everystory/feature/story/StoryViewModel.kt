@@ -8,9 +8,11 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.m10.everystory.EveryStoryApplication
 import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.analytics.AnalyticsTracker
+import com.m10.everystory.core.notifications.SavedReminderScheduler
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.SavedArticlesRepository
+import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +25,8 @@ data class StoryUiState(
     val content: StoryContent = StoryContent.Loading,
     val isSaved: Boolean = false,
     val message: StoryMessage? = null,
+    // One-off: the screen asks Android for notification permission, then reports back.
+    val askNotificationPermission: Boolean = false,
 )
 
 sealed interface StoryContent {
@@ -37,15 +41,23 @@ class StoryViewModel(
     private val articleKey: String,
     private val newsRepository: NewsRepository,
     private val savedArticlesRepository: SavedArticlesRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val savedReminders: SavedReminderScheduler,
     private val analytics: AnalyticsTracker,
 ) : ViewModel() {
 
     private val content = MutableStateFlow<StoryContent>(StoryContent.Loading)
     private val message = MutableStateFlow<StoryMessage?>(null)
+    private val askNotificationPermission = MutableStateFlow(false)
 
     val uiState: StateFlow<StoryUiState> =
-        combine(content, savedArticlesRepository.isSaved(articleKey), message) { content, isSaved, message ->
-            StoryUiState(content = content, isSaved = isSaved, message = message)
+        combine(
+            content,
+            savedArticlesRepository.isSaved(articleKey),
+            message,
+            askNotificationPermission,
+        ) { content, isSaved, message, askPermission ->
+            StoryUiState(content = content, isSaved = isSaved, message = message, askNotificationPermission = askPermission)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), StoryUiState())
 
     init {
@@ -68,6 +80,11 @@ class StoryViewModel(
                 savedArticlesRepository.save(article)
                 message.value = StoryMessage.Saved
                 analytics.log(AnalyticsEvent.StorySave(article.source.name))
+                savedReminders.schedule()
+                // The first save is when a reminder starts to make sense, so that's when we ask.
+                if (!userPreferencesRepository.notificationPermissionAsked.first()) {
+                    askNotificationPermission.value = true
+                }
             }
         }
     }
@@ -88,6 +105,11 @@ class StoryViewModel(
         analytics.log(AnalyticsEvent.StoryLinkOut(article.source.name))
     }
 
+    fun onNotificationPermissionAsked() {
+        askNotificationPermission.value = false
+        viewModelScope.launch { userPreferencesRepository.setNotificationPermissionAsked() }
+    }
+
     fun onMessageShown() {
         message.value = null
     }
@@ -102,6 +124,8 @@ class StoryViewModel(
                     articleKey = articleKey,
                     newsRepository = app.container.newsRepository,
                     savedArticlesRepository = app.container.savedArticlesRepository,
+                    userPreferencesRepository = app.container.userPreferencesRepository,
+                    savedReminders = app.container.savedReminderScheduler,
                     analytics = app.container.analyticsTracker,
                 )
             }

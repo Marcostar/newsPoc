@@ -8,9 +8,14 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
+import androidx.work.WorkManager
+import androidx.work.WorkerFactory
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.m10.everystory.BuildConfig
 import com.m10.everystory.core.ads.AdConsent
+import com.m10.everystory.core.notifications.SavedReminderNotifier
+import com.m10.everystory.core.notifications.SavedReminderScheduler
+import com.m10.everystory.core.notifications.WorkManagerSavedReminderScheduler
 import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.analytics.FirebaseAnalyticsTracker
 import com.m10.everystory.core.database.EveryStoryDatabase
@@ -63,6 +68,12 @@ interface AppContainer {
 
     // Coil's image downloads go through this client so their bytes are counted too.
     val imageHttpClient: OkHttpClient
+
+    val savedReminderNotifier: SavedReminderNotifier
+    val savedReminderScheduler: SavedReminderScheduler
+
+    // Hands background workers their dependencies (see EveryStoryApplication).
+    val workerFactory: WorkerFactory
 }
 
 class DefaultAppContainer(
@@ -143,6 +154,16 @@ class DefaultAppContainer(
     }
 
     override val adConsent: AdConsent by lazy { AdConsent(context) }
+
+    override val savedReminderNotifier: SavedReminderNotifier by lazy { SavedReminderNotifier(context) }
+
+    override val savedReminderScheduler: SavedReminderScheduler by lazy {
+        WorkManagerSavedReminderScheduler(WorkManager.getInstance(context))
+    }
+
+    override val workerFactory: WorkerFactory by lazy {
+        EveryStoryWorkerFactory(savedArticlesRepository, userPreferencesRepository, savedReminderNotifier)
+    }
 
     override val imageHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()

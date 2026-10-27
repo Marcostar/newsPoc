@@ -13,9 +13,11 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsMotion
+import com.m10.everystory.core.notifications.SAVED_DEEP_LINK
 import com.m10.everystory.core.ui.LocalNavAnimatedVisibilityScope
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalSharedTransitionScope
@@ -64,7 +66,7 @@ fun EsNavHost(
                         )
                     }
                 }
-                composable<SavedDestination> {
+                composable<SavedDestination>(deepLinks = listOf(navDeepLink { uriPattern = SAVED_DEEP_LINK })) {
                     WithSharedElements {
                         SavedRoute(
                             onSearchClick = { navController.navigate(SearchDestination) },

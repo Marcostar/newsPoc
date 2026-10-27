@@ -21,4 +21,6 @@ class RoomSavedArticlesRepository(
     override suspend fun save(article: Article) = savedArticleDao.upsert(article.toSavedEntity(now()))
 
     override suspend fun remove(key: String) = savedArticleDao.delete(key)
+
+    override suspend fun countSavedSince(since: Instant): Int = savedArticleDao.countSavedAfter(since.toEpochMilli())
 }

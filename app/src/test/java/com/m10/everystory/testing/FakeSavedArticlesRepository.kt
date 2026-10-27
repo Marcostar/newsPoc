@@ -5,6 +5,7 @@ import com.m10.everystory.domain.repository.SavedArticlesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 
 class FakeSavedArticlesRepository : SavedArticlesRepository {
 
@@ -24,4 +25,9 @@ class FakeSavedArticlesRepository : SavedArticlesRepository {
     override suspend fun remove(key: String) {
         saved.value = saved.value.filterNot { it.key == key }
     }
+
+    // Tests set this directly; the real repository counts rows by savedAt.
+    var savedSinceCount = 0
+
+    override suspend fun countSavedSince(since: Instant): Int = savedSinceCount
 }

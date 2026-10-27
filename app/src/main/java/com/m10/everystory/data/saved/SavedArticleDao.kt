@@ -14,6 +14,9 @@ interface SavedArticleDao {
     @Query("SELECT EXISTS(SELECT 1 FROM saved_articles WHERE articleKey = :articleKey)")
     fun observeIsSaved(articleKey: String): Flow<Boolean>
 
+    @Query("SELECT COUNT(*) FROM saved_articles WHERE savedAt > :sinceMillis")
+    suspend fun countSavedAfter(sinceMillis: Long): Int
+
     @Query("SELECT * FROM saved_articles WHERE articleKey = :articleKey")
     suspend fun getByKey(articleKey: String): SavedArticleEntity?
 

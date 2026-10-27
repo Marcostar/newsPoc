@@ -56,6 +56,9 @@ sealed class AnalyticsEvent(
     data object AdClick :
         AnalyticsEvent("ad_click", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
 
+    data object NotificationOpen :
+        AnalyticsEvent("notification_open", mapOf("notification" to "saved_reminder"))
+
     data object TourComplete : AnalyticsEvent("tour_complete")
 
     // Which tip people give up on says more than the skip itself.

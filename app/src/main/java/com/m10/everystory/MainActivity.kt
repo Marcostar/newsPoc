@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
+import com.m10.everystory.core.notifications.SAVED_DEEP_LINK
 
 class MainActivity : ComponentActivity() {
 
@@ -23,6 +24,11 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         splashScreen.setKeepOnScreenCondition { viewModel.appearance.value == null }
+
+        // Opened from the saved-stories reminder; the nav graph does the navigating itself.
+        if (savedInstanceState == null && intent?.data?.toString() == SAVED_DEEP_LINK) {
+            viewModel.onNotificationOpened()
+        }
 
         // The consent form needs an Activity, so the activity starts it; ads wait for the answer.
         val adConsent = (application as EveryStoryApplication).container.adConsent

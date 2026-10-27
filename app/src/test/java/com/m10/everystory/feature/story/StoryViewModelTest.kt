@@ -4,6 +4,7 @@ import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeSavedArticlesRepository
+import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testArticle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,10 +30,12 @@ class StoryViewModelTest {
     private val news = FakeNewsRepository()
     private val saved = FakeSavedArticlesRepository()
     private val analytics = FakeAnalyticsTracker()
+    private val preferences = FakeUserPreferencesRepository()
+    private var remindersScheduled = 0
     private val article = testArticle("a")
 
     // uiState is WhileSubscribed, so collect it the way the screen does.
-    private fun TestScope.createViewModel(key: String = "a") = StoryViewModel(key, news, saved, analytics).also { viewModel ->
+    private fun TestScope.createViewModel(key: String = "a") = StoryViewModel(key, news, saved, preferences, { remindersScheduled++ }, analytics).also { viewModel ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
     }
 
@@ -132,5 +135,36 @@ class StoryViewModelTest {
             ),
             analytics.events,
         )
+    }
+
+    @Test
+    fun `saving schedules the read-later reminder, removing does not`() = runTest {
+        news.cachedArticles["a"] = article
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+
+        assertEquals(1, remindersScheduled)
+    }
+
+    @Test
+    fun `notification permission is asked after the first save only`() = runTest {
+        news.cachedArticles["a"] = article
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.askNotificationPermission)
+
+        viewModel.onNotificationPermissionAsked()
+        viewModel.onToggleSave()
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.askNotificationPermission)
     }
 }

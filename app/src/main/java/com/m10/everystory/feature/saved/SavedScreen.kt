@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,8 @@ fun SavedRoute(
     viewModel: SavedViewModel = viewModel(factory = SavedViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // Runs each time the tab comes into view, including when opened from the reminder.
+    LaunchedEffect(Unit) { viewModel.onShown() }
     SavedScreen(uiState = uiState, onSearchClick = onSearchClick, onArticleClick = onArticleClick)
 }
 

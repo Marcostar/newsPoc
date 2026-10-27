@@ -164,6 +164,15 @@
     <string name="data_ads_and_other">Ads and other</string>
     <string name="data_note">Android counts everything this app sends and receives. EveryStory measures stories and images itself; ads and other is the rest: the ad banner, Firebase and Google Play services. Android adds up its figures every so often, so the newest use can take a little while to appear.</string>
 
+    <!-- Saved-stories reminder -->
+    <string name="notification_channel_saved">Saved stories</string>
+    <string name="notification_channel_saved_description">A reminder about stories you saved to read later.</string>
+    <string name="notification_saved_title">Saved for later</string>
+    <plurals name="notification_saved_text">
+        <item quantity="one">You saved %1$d story to read later.</item>
+        <item quantity="other">You saved %1$d stories to read later.</item>
+    </plurals>
+
     <!-- Ads -->
     <string name="ad_label">Ad</string>
     <string name="ad_description">Advertisement</string>

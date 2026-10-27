@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.TextSize
@@ -12,10 +13,13 @@ import com.m10.everystory.domain.model.ThemeSetting
 import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
 
 private val THEME_SETTING = stringPreferencesKey("theme_setting")
 private val TEXT_SIZE_STEP = intPreferencesKey("text_size_step")
 private val NEWS_LANGUAGE = stringPreferencesKey("news_language")
+private val SAVED_LAST_VIEWED_AT = longPreferencesKey("saved_last_viewed_at")
+private val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
 private val TOUR_SEEN = booleanPreferencesKey("tour_seen")
 
 class DataStoreUserPreferencesRepository(
@@ -46,6 +50,22 @@ class DataStoreUserPreferencesRepository(
 
     override suspend fun setNewsLanguage(language: NewsLanguage) {
         dataStore.edit { it[NEWS_LANGUAGE] = language.code }
+    }
+
+    override val savedLastViewedAt: Flow<Instant> = dataStore.data.map { prefs ->
+        Instant.ofEpochMilli(prefs[SAVED_LAST_VIEWED_AT] ?: 0L)
+    }
+
+    override suspend fun setSavedLastViewedAt(time: Instant) {
+        dataStore.edit { it[SAVED_LAST_VIEWED_AT] = time.toEpochMilli() }
+    }
+
+    override val notificationPermissionAsked: Flow<Boolean> = dataStore.data.map { prefs ->
+        prefs[NOTIFICATION_PERMISSION_ASKED] ?: false
+    }
+
+    override suspend fun setNotificationPermissionAsked() {
+        dataStore.edit { it[NOTIFICATION_PERMISSION_ASKED] = true }
     }
 
     override val tourSeen: Flow<Boolean> = dataStore.data.map { prefs -> prefs[TOUR_SEEN] ?: false }

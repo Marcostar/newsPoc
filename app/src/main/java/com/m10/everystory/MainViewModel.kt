@@ -38,6 +38,8 @@ class MainViewModel(
         analytics.log(AnalyticsEvent.ScreenView(screen))
     }
 
+    fun onNotificationOpened() = analytics.log(AnalyticsEvent.NotificationOpen)
+
     fun onAdImpression() = analytics.log(AnalyticsEvent.AdImpression)
 
     fun onAdClick() = analytics.log(AnalyticsEvent.AdClick)

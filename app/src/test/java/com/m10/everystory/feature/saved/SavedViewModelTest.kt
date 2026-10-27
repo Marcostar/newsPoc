@@ -1,9 +1,11 @@
 package com.m10.everystory.feature.saved
 
 import com.m10.everystory.testing.FakeSavedArticlesRepository
+import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testArticle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -13,6 +15,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import java.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SavedViewModelTest {
@@ -21,10 +24,11 @@ class SavedViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val saved = FakeSavedArticlesRepository()
+    private val preferences = FakeUserPreferencesRepository()
 
     @Test
     fun `starts loading, then shows an empty list`() = runTest {
-        val viewModel = SavedViewModel(saved)
+        val viewModel = SavedViewModel(saved, preferences)
         assertTrue(viewModel.uiState.value.isLoading)
 
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
@@ -36,7 +40,7 @@ class SavedViewModelTest {
 
     @Test
     fun `newly saved stories appear at the top without a refresh`() = runTest {
-        val viewModel = SavedViewModel(saved)
+        val viewModel = SavedViewModel(saved, preferences)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
         saved.save(testArticle("a"))
@@ -44,5 +48,16 @@ class SavedViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf("b", "a"), viewModel.uiState.value.articles.map { it.key })
+    }
+
+    @Test
+    fun `opening Saved records when it was last seen, for the reminder`() = runTest {
+        val seenAt = Instant.parse("2026-10-27T09:00:00Z")
+        val viewModel = SavedViewModel(saved, preferences, now = { seenAt })
+
+        viewModel.onShown()
+        advanceUntilIdle()
+
+        assertEquals(seenAt, preferences.savedLastViewedAt.first())
     }
 }

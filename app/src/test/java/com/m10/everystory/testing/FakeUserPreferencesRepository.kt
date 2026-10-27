@@ -6,6 +6,7 @@ import com.m10.everystory.domain.model.ThemeSetting
 import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.time.Instant
 
 class FakeUserPreferencesRepository(tourSeen: Boolean = false) : UserPreferencesRepository {
 
@@ -28,6 +29,20 @@ class FakeUserPreferencesRepository(tourSeen: Boolean = false) : UserPreferences
 
     override suspend fun setNewsLanguage(language: NewsLanguage) {
         this.language.value = language
+    }
+
+    private val lastViewed = MutableStateFlow(Instant.EPOCH)
+    override val savedLastViewedAt: StateFlow<Instant> get() = lastViewed
+
+    override suspend fun setSavedLastViewedAt(time: Instant) {
+        lastViewed.value = time
+    }
+
+    private val permissionAsked = MutableStateFlow(false)
+    override val notificationPermissionAsked: StateFlow<Boolean> get() = permissionAsked
+
+    override suspend fun setNotificationPermissionAsked() {
+        permissionAsked.value = true
     }
 
     private val seen = MutableStateFlow(tourSeen)
