@@ -9,12 +9,12 @@
     <string name="nav_today">Today</string>
     <string name="nav_saved">Saved</string>
     <string name="nav_you">You</string>
+    <string name="nav_search">Search</string>
 
     <string name="today_title">Today</string>
     <string name="search_hint">Search stories, places, people</string>
     <string name="saved_title">Saved</string>
     <string name="you_title">You</string>
-    <string name="story_title">Story</string>
     <string name="back">Back</string>
     <string name="clear">Clear</string>
 
@@ -28,6 +28,17 @@
     <string name="search_sorted_newest">Newest first</string>
     <string name="search_empty_title">No stories match “%1$s”</string>
     <string name="search_empty_body">Try a shorter keyword, such as a place name.</string>
+
+    <string name="back_to">Back to %1$s</string>
+    <string name="story_published">Published %1$s</string>
+    <string name="story_byline">By %1$s</string>
+    <string name="story_image_credit">Image: %1$s</string>
+    <string name="story_image_description">Image supplied by %1$s</string>
+    <string name="story_preview_note">This is the preview NewsAPI shares. The full story is on %1$s.</string>
+    <string name="read_full_story">Read the full story</string>
+    <string name="read_full_story_description">Read the full story at %1$s, opens in browser</string>
+    <string name="story_missing_title">This story isn’t available</string>
+    <string name="story_missing_body">It has dropped out of the news we keep on your phone. Go back for the latest stories.</string>
 
     <string name="status_updated">Updated %1$s</string>
     <string name="status_refreshing">Checking for new stories…</string>

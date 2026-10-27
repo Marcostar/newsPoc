@@ -2,9 +2,11 @@ package com.m10.everystory.data.news
 
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
+import com.m10.everystory.data.news.local.ArticleEntity
 import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.testing.FakeArticleDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -17,12 +19,15 @@ import okhttp3.mockwebserver.SocketPolicy
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.create
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -31,6 +36,8 @@ class DefaultNewsRepositoryTest {
     private val server = MockWebServer()
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
     private lateinit var repository: DefaultNewsRepository
+    private val dao = FakeArticleDao()
+    private val now = Instant.parse("2026-10-26T09:30:00Z")
 
     @Before
     fun setUp() {
@@ -42,7 +49,7 @@ class DefaultNewsRepositoryTest {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create<NewsApiService>()
-        repository = DefaultNewsRepository(api, json, UnconfinedTestDispatcher())
+        repository = DefaultNewsRepository(api, dao, json, UnconfinedTestDispatcher(), now = { now })
     }
 
     @After
@@ -68,6 +75,38 @@ class DefaultNewsRepositoryTest {
         assertEquals("health", request.requestUrl?.queryParameter("category"))
         assertEquals("en", request.requestUrl?.queryParameter("language"))
         assertEquals("20", request.requestUrl?.queryParameter("pageSize"))
+    }
+
+    @Test
+    fun `loaded articles are cached and can be read back by key`() = runTest {
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        val article = repository.topHeadlines(page = 1).successValue().articles.single()
+
+        assertEquals(article, repository.article(article.key))
+    }
+
+    @Test
+    fun `cache drops entries older than a week`() = runTest {
+        dao.rows["old"] = staleEntity()
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        repository.topHeadlines(page = 1)
+
+        assertNull(dao.rows["old"])
+    }
+
+    @Test
+    fun `a failing cache write still returns the stories`() = runTest {
+        dao.failWrites = true
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        assertEquals(1, repository.topHeadlines(page = 1).successValue().articles.size)
+    }
+
+    @Test
+    fun `unknown key reads as null`() = runTest {
+        assertNull(repository.article("missing"))
     }
 
     @Test
@@ -136,6 +175,20 @@ class DefaultNewsRepositoryTest {
 
         assertEquals(AppError.Offline, repository.topHeadlines(page = 1).failureError())
     }
+
+    private fun staleEntity() = ArticleEntity(
+        articleKey = "old",
+        title = "Old",
+        description = null,
+        content = null,
+        url = "https://example.com/old",
+        imageUrl = null,
+        sourceId = null,
+        sourceName = "Old Post",
+        author = null,
+        publishedAtMillis = 0,
+        cachedAt = now.minus(Duration.ofDays(8)).toEpochMilli(),
+    )
 
     private fun errorResponse(code: Int, apiCode: String) = MockResponse()
         .setResponseCode(code)

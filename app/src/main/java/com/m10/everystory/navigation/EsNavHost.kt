@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +20,7 @@ import androidx.navigation.toRoute
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.feature.search.SearchRoute
+import com.m10.everystory.feature.story.StoryRoute
 import com.m10.everystory.feature.today.TodayRoute
 import com.m10.everystory.feature.today.TodayViewModel
 
@@ -30,27 +32,31 @@ fun EsNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = TodayRoute,
+        startDestination = TodayDestination,
         modifier = modifier,
     ) {
-        composable<TodayRoute> {
+        composable<TodayDestination> {
             TodayRoute(
                 viewModel = todayViewModel,
-                onSearchClick = { navController.navigate(SearchRoute) },
-                onArticleClick = { article -> navController.navigate(StoryRoute(article.key)) },
+                onSearchClick = { navController.navigate(SearchDestination) },
+                onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
             )
         }
-        composable<SavedRoute> { PlaceholderScreen(R.string.saved_title) }
-        composable<YouRoute> { PlaceholderScreen(R.string.you_title) }
-        composable<SearchRoute> {
+        composable<SavedDestination> { PlaceholderScreen(R.string.saved_title) }
+        composable<YouDestination> { PlaceholderScreen(R.string.you_title) }
+        composable<SearchDestination> {
             SearchRoute(
                 onBack = { navController.popBackStack() },
-                onArticleClick = { article -> navController.navigate(StoryRoute(article.key)) },
+                onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
             )
         }
-        composable<StoryRoute> { entry ->
-            val route = entry.toRoute<StoryRoute>()
-            PlaceholderScreen(R.string.story_title) { Text(route.articleKey) }
+        composable<StoryDestination> { entry ->
+            val cameFromSearch = navController.previousBackStackEntry?.destination?.hasRoute<SearchDestination>() == true
+            StoryRoute(
+                articleKey = entry.toRoute<StoryDestination>().articleKey,
+                backLabel = stringResource(if (cameFromSearch) R.string.nav_search else R.string.nav_today),
+                onBack = { navController.popBackStack() },
+            )
         }
     }
 }

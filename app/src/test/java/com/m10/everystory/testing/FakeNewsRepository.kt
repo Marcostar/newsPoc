@@ -31,6 +31,10 @@ class FakeNewsRepository : NewsRepository {
 
     override suspend fun sources(category: NewsCategory?, language: String): AppResult<List<NewsSource>> =
         error("Not used in this test")
+
+    val cachedArticles = mutableMapOf<String, Article>()
+
+    override suspend fun article(key: String): Article? = cachedArticles[key]
 }
 
 fun testArticle(key: String) = Article(

@@ -17,9 +17,9 @@ enum class TopLevelDestination(
     val icon: ImageVector,
     @param:StringRes val labelRes: Int,
 ) {
-    Today(TodayRoute, TodayRoute::class, EsIcons.Today, R.string.nav_today),
-    Saved(SavedRoute, SavedRoute::class, EsIcons.SavedTab, R.string.nav_saved),
-    You(YouRoute, YouRoute::class, EsIcons.You, R.string.nav_you),
+    Today(TodayDestination, TodayDestination::class, EsIcons.Today, R.string.nav_today),
+    Saved(SavedDestination, SavedDestination::class, EsIcons.SavedTab, R.string.nav_saved),
+    You(YouDestination, YouDestination::class, EsIcons.You, R.string.nav_you),
 }
 
 fun NavDestination?.topLevelDestination(): TopLevelDestination? =

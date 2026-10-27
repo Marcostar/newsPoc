@@ -5,7 +5,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.room.Room
 import com.m10.everystory.BuildConfig
+import com.m10.everystory.core.database.EveryStoryDatabase
 import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.data.news.DefaultNewsRepository
@@ -26,6 +28,7 @@ import java.util.concurrent.TimeUnit
 private const val CONNECT_TIMEOUT_SECONDS = 10L
 private const val READ_TIMEOUT_SECONDS = 15L
 private const val PREFERENCES_FILE = "user_prefs"
+private const val DATABASE_FILE = "everystory.db"
 
 // Manual DI: everything the app shares is created here once, and ViewModel
 // factories pull what they need from it.
@@ -60,8 +63,16 @@ class DefaultAppContainer(
             .build()
     }
 
+    private val database: EveryStoryDatabase by lazy {
+        Room.databaseBuilder(context, EveryStoryDatabase::class.java, DATABASE_FILE).build()
+    }
+
     override val newsRepository: NewsRepository by lazy {
-        DefaultNewsRepository(api = retrofit.create<NewsApiService>(), json = json)
+        DefaultNewsRepository(
+            api = retrofit.create<NewsApiService>(),
+            articleDao = database.articleDao(),
+            json = json,
+        )
     }
 
     private val preferences: DataStore<Preferences> by lazy {

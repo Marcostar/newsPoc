@@ -38,6 +38,8 @@ object EsSize {
     val progressSmall = 20.dp
     val skeletonLine = 16.dp
     val hairline = 1.dp
+    val sourceBadge = 40.dp
+    val sourceButton = 64.dp
 }
 
 object EsRadius {
