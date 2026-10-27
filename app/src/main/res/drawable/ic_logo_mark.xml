@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EveryStory mark: two coral quote heads over a story line. Geometry traced from EveryStory Logo.dc.html -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="37dp" android:height="34dp"
+    android:viewportWidth="74" android:viewportHeight="68">
+    <group>
+        <path android:fillColor="#E07A5F" android:pathData="M24,11 A12,19 0 0 1 12,30 A2,19 0 0 0 14,11 Z"/>
+        <path android:fillColor="#F7F1E6" android:pathData="M4,11 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 Z"/>
+        <path android:fillColor="#E07A5F" android:pathData="M6,11 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+        <path android:fillColor="#E07A5F" android:pathData="M50,11 A12,19 0 0 1 38,30 A2,19 0 0 0 40,11 Z"/>
+        <path android:fillColor="#F7F1E6" android:pathData="M30,11 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0 Z"/>
+        <path android:fillColor="#E07A5F" android:pathData="M32,11 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
+        <path android:fillColor="#0F3B3A" android:pathData="M11,40 H69 A5,5 0 0 1 69,50 H11 A5,5 0 0 1 11,40 Z"/>
+        <path android:fillColor="#8FAE9F" android:pathData="M11,58 H45 A5,5 0 0 1 45,68 H11 A5,5 0 0 1 11,58 Z"/>
+    </group>
+</vector>
