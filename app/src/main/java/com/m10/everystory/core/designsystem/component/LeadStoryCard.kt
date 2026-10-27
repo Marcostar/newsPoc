@@ -16,6 +16,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import com.m10.everystory.R
+import com.m10.everystory.core.ui.StoryElement
+import com.m10.everystory.core.ui.sharedStoryElement
 import com.m10.everystory.core.designsystem.theme.EsRadius
 import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
@@ -53,6 +55,7 @@ fun LeadStoryCard(
                     url = url,
                     contentDescription = null,
                     modifier = Modifier
+                        .sharedStoryElement(article.key, StoryElement.Image, clipShape = EsRadius.image)
                         .fillMaxWidth()
                         .aspectRatio(LEAD_IMAGE_RATIO)
                         .clip(EsRadius.image),
@@ -68,6 +71,7 @@ fun LeadStoryCard(
                 text = article.title,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.sharedStoryElement(article.key, StoryElement.Headline),
             )
             Text(
                 text = time,

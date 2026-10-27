@@ -1,5 +1,7 @@
 package com.m10.everystory.core.designsystem.theme
 
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
@@ -67,5 +69,8 @@ val EsShapes = Shapes(
 object EsMotion {
     const val STANDARD_MS = 200
     const val ENTER_EXIT_MS = 240
-    const val REDUCED_MS = 0 // when the system animator duration scale is 0
+    const val REDUCED_MS = 150 // plain crossfades when the reader has asked for less motion
+
+    // Starts quickly and settles gently. No bounce or overshoot anywhere in the app.
+    val Easing: Easing = LinearOutSlowInEasing
 }

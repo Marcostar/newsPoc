@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
+import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.designsystem.component.EsMessage
 import com.m10.everystory.core.designsystem.component.PagingFooter
 import com.m10.everystory.core.designsystem.component.StoryRow
@@ -186,7 +187,7 @@ private fun LazyListScope.searchContent(
         SearchResults.Idle -> recentSearches(uiState.recentSearches, onRecentSearchClick, itemModifier)
 
         SearchResults.Loading -> item(key = "skeleton") {
-            StorySkeleton(showLead = false, modifier = itemModifier.padding(top = EsSpace.s16))
+            StorySkeleton(showLead = false, modifier = itemModifier.animateStoryItem(this).padding(top = EsSpace.s16))
         }
 
         is SearchResults.Failed -> item(key = "error") {
@@ -197,7 +198,7 @@ private fun LazyListScope.searchContent(
                 body = stringResource(message.body),
                 actionLabel = stringResource(R.string.try_again),
                 onAction = onRetry,
-                modifier = itemModifier,
+                modifier = itemModifier.animateStoryItem(this),
             )
         }
 
@@ -208,7 +209,7 @@ private fun LazyListScope.searchContent(
                         icon = EsIcons.SearchOff,
                         title = stringResource(R.string.search_empty_title, uiState.searchedQuery),
                         body = stringResource(R.string.search_empty_body),
-                        modifier = itemModifier,
+                        modifier = itemModifier.animateStoryItem(this),
                     )
                 }
                 return
@@ -222,7 +223,7 @@ private fun LazyListScope.searchContent(
                     article = article,
                     onClick = { onArticleClick(article) },
                     highlight = highlight,
-                    modifier = itemModifier,
+                    modifier = itemModifier.animateStoryItem(this),
                 )
             }
             item(key = "footer") {

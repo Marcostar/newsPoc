@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
+import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.designsystem.component.EsMessage
 import com.m10.everystory.core.designsystem.component.EsSearchBarButton
 import com.m10.everystory.core.designsystem.component.StoryRow
@@ -77,7 +78,7 @@ fun SavedScreen(
                         icon = EsIcons.SavedTab,
                         title = stringResource(R.string.saved_empty_title),
                         body = stringResource(R.string.saved_empty_body),
-                        modifier = itemModifier,
+                        modifier = itemModifier.animateStoryItem(this),
                     )
                 }
             } else {
@@ -85,7 +86,11 @@ fun SavedScreen(
                     SavedStatus(count = uiState.articles.size, modifier = itemModifier)
                 }
                 items(uiState.articles, key = { it.key }) { article ->
-                    StoryRow(article = article, onClick = { onArticleClick(article) }, modifier = itemModifier)
+                    StoryRow(
+                        article = article,
+                        onClick = { onArticleClick(article) },
+                        modifier = itemModifier.animateStoryItem(this),
+                    )
                 }
             }
         }

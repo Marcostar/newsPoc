@@ -30,9 +30,11 @@ import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
 import com.m10.everystory.core.designsystem.component.EsNavItem
 import com.m10.everystory.core.designsystem.theme.EsMotion
+import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.TourTargets
+import com.m10.everystory.core.ui.rememberSystemReducedMotion
 import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.feature.display.TextAndDisplaySheet
 import com.m10.everystory.feature.today.TodayViewModel
@@ -72,7 +74,10 @@ fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
     // Opened from Today, Story and You, so it lives here rather than on any one screen.
     var showDisplaySettings by rememberSaveable { mutableStateOf(false) }
 
-    CompositionLocalProvider(LocalTourTargets provides tourTargets) {
+    CompositionLocalProvider(
+        LocalTourTargets provides tourTargets,
+        LocalReducedMotion provides rememberSystemReducedMotion(),
+    ) {
         Box {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,

@@ -22,6 +22,8 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextOverflow
 import com.m10.everystory.R
+import com.m10.everystory.core.ui.StoryElement
+import com.m10.everystory.core.ui.sharedStoryElement
 import com.m10.everystory.core.designsystem.theme.EsRadius
 import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
@@ -76,6 +78,7 @@ fun StoryRow(
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = HEADLINE_MAX_LINES,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.sharedStoryElement(article.key, StoryElement.Headline),
                 )
                 if (article.imageUrl == null && article.description != null) {
                     Text(
@@ -92,6 +95,7 @@ fun StoryRow(
                     url = url,
                     contentDescription = null,
                     modifier = Modifier
+                        .sharedStoryElement(article.key, StoryElement.Image, clipShape = EsRadius.image)
                         .size(EsSize.thumbnail)
                         .clip(EsRadius.image),
                 )

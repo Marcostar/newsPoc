@@ -56,6 +56,7 @@ import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
 import com.m10.everystory.core.ui.LoadMoreWhenNearEnd
 import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
+import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.ui.clockTimeText
 import com.m10.everystory.core.ui.nativeNameRes
 import com.m10.everystory.core.ui.toErrorMessage
@@ -200,7 +201,7 @@ private fun LazyListScope.feedItems(
 ) {
     val itemModifier = Modifier.padding(horizontal = EsSpace.screen)
     when (val status = uiState.feedStatus) {
-        FeedStatus.Loading -> item(key = "skeleton") { StorySkeleton(itemModifier) }
+        FeedStatus.Loading -> item(key = "skeleton") { StorySkeleton(itemModifier.animateStoryItem(this)) }
 
         is FeedStatus.Failed -> item(key = "error") {
             val message = status.error.toErrorMessage()
@@ -210,7 +211,7 @@ private fun LazyListScope.feedItems(
                 body = stringResource(message.body),
                 actionLabel = stringResource(R.string.try_again),
                 onAction = onRetry,
-                modifier = itemModifier,
+                modifier = itemModifier.animateStoryItem(this),
             )
         }
 
@@ -223,7 +224,7 @@ private fun LazyListScope.feedItems(
                         body = stringResource(R.string.feed_empty_body),
                         actionLabel = stringResource(R.string.topic_all),
                         onAction = { onCategorySelected(null) },
-                        modifier = itemModifier,
+                        modifier = itemModifier.animateStoryItem(this),
                     )
                 }
                 return
@@ -234,12 +235,17 @@ private fun LazyListScope.feedItems(
                     article = lead,
                     onClick = { onArticleClick(lead) },
                     modifier = itemModifier
+                        .animateStoryItem(this)
                         .padding(bottom = EsSpace.s8)
                         .then(leadModifier),
                 )
             }
             items(uiState.articles.drop(1), key = { it.key }) { article ->
-                StoryRow(article = article, onClick = { onArticleClick(article) }, modifier = itemModifier)
+                StoryRow(
+                    article = article,
+                    onClick = { onArticleClick(article) },
+                    modifier = itemModifier.animateStoryItem(this),
+                )
             }
             item(key = "footer") {
                 PagingFooter(state = uiState.loadMore, onRetry = onRetryLoadMore, modifier = itemModifier)

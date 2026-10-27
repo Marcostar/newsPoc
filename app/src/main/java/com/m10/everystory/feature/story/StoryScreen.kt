@@ -45,6 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
+import com.m10.everystory.core.ui.StoryElement
+import com.m10.everystory.core.ui.sharedStoryElement
 import com.m10.everystory.core.designsystem.component.ArticleImage
 import com.m10.everystory.core.designsystem.component.EsAaButton
 import com.m10.everystory.core.designsystem.component.EsMessage
@@ -234,7 +236,9 @@ private fun StoryContent(article: Article, onReadFullStory: (String) -> Unit) {
             text = article.title,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.semantics { heading() },
+            modifier = Modifier
+                .sharedStoryElement(article.key, StoryElement.Headline)
+                .semantics { heading() },
         )
         article.description?.let { standfirst ->
             Text(text = standfirst, style = EsType.standfirst, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -246,6 +250,7 @@ private fun StoryContent(article: Article, onReadFullStory: (String) -> Unit) {
                     url = url,
                     contentDescription = stringResource(R.string.story_image_description, article.source.name),
                     modifier = Modifier
+                        .sharedStoryElement(article.key, StoryElement.Image, clipShape = EsRadius.image)
                         .fillMaxWidth()
                         .aspectRatio(IMAGE_RATIO)
                         .clip(EsRadius.image),
