@@ -1,12 +1,18 @@
 package com.m10.everystory.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import com.m10.everystory.BuildConfig
 import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.data.news.DefaultNewsRepository
 import com.m10.everystory.data.news.remote.NewsApiService
+import com.m10.everystory.data.search.DataStoreRecentSearchesRepository
 import com.m10.everystory.domain.repository.NewsRepository
+import com.m10.everystory.domain.repository.RecentSearchesRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -19,15 +25,17 @@ import java.util.concurrent.TimeUnit
 
 private const val CONNECT_TIMEOUT_SECONDS = 10L
 private const val READ_TIMEOUT_SECONDS = 15L
+private const val PREFERENCES_FILE = "user_prefs"
 
 // Manual DI: everything the app shares is created here once, and ViewModel
 // factories pull what they need from it.
 interface AppContainer {
     val newsRepository: NewsRepository
+    val recentSearchesRepository: RecentSearchesRepository
 }
 
 class DefaultAppContainer(
-    @Suppress("unused") private val context: Context,
+    private val context: Context,
 ) : AppContainer {
 
     private val json = Json {
@@ -54,6 +62,14 @@ class DefaultAppContainer(
 
     override val newsRepository: NewsRepository by lazy {
         DefaultNewsRepository(api = retrofit.create<NewsApiService>(), json = json)
+    }
+
+    private val preferences: DataStore<Preferences> by lazy {
+        PreferenceDataStoreFactory.create { context.preferencesDataStoreFile(PREFERENCES_FILE) }
+    }
+
+    override val recentSearchesRepository: RecentSearchesRepository by lazy {
+        DataStoreRecentSearchesRepository(preferences)
     }
 
     private fun loggingInterceptor() =

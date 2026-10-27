@@ -25,15 +25,20 @@ private const val LEAD_IMAGE_RATIO = 16f / 9f
 
 // Static on purpose: the design asks for no shimmer, which also covers reduced motion.
 @Composable
-fun StorySkeleton(modifier: Modifier = Modifier) {
+fun StorySkeleton(
+    modifier: Modifier = Modifier,
+    showLead: Boolean = true,
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(EsSpace.s24),
         modifier = modifier.clearAndSetSemantics { },
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(EsSpace.s8)) {
-            Block(Modifier.fillMaxWidth().aspectRatio(LEAD_IMAGE_RATIO))
-            Line(SHORT_LINE)
-            Line(LONG_LINE)
+        if (showLead) {
+            Column(verticalArrangement = Arrangement.spacedBy(EsSpace.s8)) {
+                Block(Modifier.fillMaxWidth().aspectRatio(LEAD_IMAGE_RATIO))
+                Line(SHORT_LINE)
+                Line(LONG_LINE)
+            }
         }
         repeat(SKELETON_ROWS) {
             Row(horizontalArrangement = Arrangement.spacedBy(EsSpace.s16)) {

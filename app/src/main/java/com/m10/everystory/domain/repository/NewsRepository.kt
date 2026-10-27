@@ -7,6 +7,9 @@ import com.m10.everystory.domain.model.NewsSource
 
 const val DEFAULT_NEWS_LANGUAGE = "en"
 
+// NewsAPI's developer plan never returns more than this many results for one query.
+const val MAX_RESULTS = 100
+
 interface NewsRepository {
 
     suspend fun topHeadlines(

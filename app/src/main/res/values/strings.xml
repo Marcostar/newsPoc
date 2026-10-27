@@ -14,8 +14,20 @@
     <string name="search_hint">Search stories, places, people</string>
     <string name="saved_title">Saved</string>
     <string name="you_title">You</string>
-    <string name="search_title">Search</string>
     <string name="story_title">Story</string>
+    <string name="back">Back</string>
+    <string name="clear">Clear</string>
+
+    <string name="recent_searches">Recent searches</string>
+    <string name="search_hint_body">Results start as you type.</string>
+    <plurals name="search_result_count">
+        <item quantity="one">%1$s story</item>
+        <item quantity="other">%1$s stories</item>
+    </plurals>
+    <string name="search_result_count_capped">Newest %1$d of %2$s stories</string>
+    <string name="search_sorted_newest">Newest first</string>
+    <string name="search_empty_title">No stories match “%1$s”</string>
+    <string name="search_empty_body">Try a shorter keyword, such as a place name.</string>
 
     <string name="status_updated">Updated %1$s</string>
     <string name="status_refreshing">Checking for new stories…</string>

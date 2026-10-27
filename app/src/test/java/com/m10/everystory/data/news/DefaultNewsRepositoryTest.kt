@@ -89,6 +89,7 @@ class DefaultNewsRepositoryTest {
         assertEquals("/v2/everything", url?.encodedPath)
         assertEquals("night shift", url?.queryParameter("q"))
         assertEquals("publishedAt", url?.queryParameter("sortBy"))
+        assertEquals("title,description", url?.queryParameter("searchIn"))
     }
 
     @Test

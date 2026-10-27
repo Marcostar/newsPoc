@@ -18,6 +18,7 @@ interface NewsApiService {
     @GET("everything")
     suspend fun everything(
         @Query("q") query: String,
+        @Query("searchIn") searchIn: String,
         @Query("language") language: String,
         @Query("sortBy") sortBy: String,
         @Query("page") page: Int,

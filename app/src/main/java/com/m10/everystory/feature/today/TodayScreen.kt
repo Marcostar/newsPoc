@@ -22,10 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -51,6 +48,7 @@ import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.core.designsystem.theme.EsTheme
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
+import com.m10.everystory.core.ui.LoadMoreWhenNearEnd
 import com.m10.everystory.core.ui.clockTimeText
 import com.m10.everystory.core.ui.toErrorMessage
 import com.m10.everystory.domain.model.Article
@@ -58,9 +56,6 @@ import com.m10.everystory.domain.model.ArticleSource
 import com.m10.everystory.domain.model.NewsCategory
 import java.time.Duration
 import java.time.Instant
-
-// Ask for the next page while a few stories are still below the fold.
-private const val PREFETCH_DISTANCE = 5
 
 private val topics: List<Pair<NewsCategory?, Int>> = listOf(
     null to R.string.topic_all,
@@ -195,19 +190,6 @@ private fun LazyListScope.feedItems(
     }
 }
 
-@Composable
-private fun LoadMoreWhenNearEnd(listState: LazyListState, onLoadMore: () -> Unit) {
-    val nearEnd by remember(listState) {
-        derivedStateOf {
-            val info = listState.layoutInfo
-            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
-            info.totalItemsCount > 0 && lastVisible >= info.totalItemsCount - PREFETCH_DISTANCE
-        }
-    }
-    LaunchedEffect(nearEnd) {
-        if (nearEnd) onLoadMore()
-    }
-}
 
 @Composable
 private fun TodayHeading(uiState: TodayUiState, onRefresh: () -> Unit) {

@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsSpace
+import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.today.TodayRoute
 import com.m10.everystory.feature.today.TodayViewModel
 
@@ -41,7 +42,12 @@ fun EsNavHost(
         }
         composable<SavedRoute> { PlaceholderScreen(R.string.saved_title) }
         composable<YouRoute> { PlaceholderScreen(R.string.you_title) }
-        composable<SearchRoute> { PlaceholderScreen(R.string.search_title) }
+        composable<SearchRoute> {
+            SearchRoute(
+                onBack = { navController.popBackStack() },
+                onArticleClick = { article -> navController.navigate(StoryRoute(article.key)) },
+            )
+        }
         composable<StoryRoute> { entry ->
             val route = entry.toRoute<StoryRoute>()
             PlaceholderScreen(R.string.story_title) { Text(route.articleKey) }

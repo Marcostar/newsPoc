@@ -21,8 +21,13 @@ class FakeNewsRepository : NewsRepository {
         return headlineResults.removeFirst()
     }
 
-    override suspend fun searchArticles(query: String, page: Int, language: String): AppResult<ArticlePage> =
-        error("Not used in this test")
+    val searchRequests = mutableListOf<Pair<String, Int>>()
+    val searchResults = ArrayDeque<AppResult<ArticlePage>>()
+
+    override suspend fun searchArticles(query: String, page: Int, language: String): AppResult<ArticlePage> {
+        searchRequests += query to page
+        return searchResults.removeFirst()
+    }
 
     override suspend fun sources(category: NewsCategory?, language: String): AppResult<List<NewsSource>> =
         error("Not used in this test")

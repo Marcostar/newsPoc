@@ -10,6 +10,7 @@ import com.m10.everystory.data.news.remote.dto.NewsApiErrorDto
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsSource
+import com.m10.everystory.domain.repository.MAX_RESULTS
 import com.m10.everystory.domain.repository.NewsRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,10 +22,11 @@ import timber.log.Timber
 
 const val PAGE_SIZE = 20
 
-// Developer plan limits: 100 results per query, and newest-first is what the search screen promises.
-private const val MAX_RESULTS = 100
 private const val MAX_QUERY_LENGTH = 500
 private const val SORT_NEWEST_FIRST = "publishedAt"
+
+// Matching the whole article body brings back stories that only mention the word in passing.
+private const val SEARCH_IN_TITLE_AND_DESCRIPTION = "title,description"
 private const val HTTP_UPGRADE_REQUIRED = 426
 
 class DefaultNewsRepository(
@@ -53,6 +55,7 @@ class DefaultNewsRepository(
     ): AppResult<ArticlePage> = fetchPage(page) {
         api.everything(
             query = query.trim().take(MAX_QUERY_LENGTH),
+            searchIn = SEARCH_IN_TITLE_AND_DESCRIPTION,
             language = language,
             sortBy = SORT_NEWEST_FIRST,
             page = page,
