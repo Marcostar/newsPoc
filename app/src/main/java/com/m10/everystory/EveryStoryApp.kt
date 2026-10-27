@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,6 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
 import com.m10.everystory.core.designsystem.component.EsNavItem
@@ -25,13 +27,21 @@ import com.m10.everystory.core.designsystem.theme.EsMotion
 import com.m10.everystory.feature.today.TodayViewModel
 import com.m10.everystory.navigation.EsNavHost
 import com.m10.everystory.navigation.TopLevelDestination
+import com.m10.everystory.navigation.analyticsScreen
 import com.m10.everystory.navigation.navigateToTopLevel
 import com.m10.everystory.navigation.topLevelDestination
 
 @Composable
-fun EveryStoryApp() {
+fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
+
+    // Keyed on the entry, so coming back to a screen counts as a new view. Uses the entry captured
+    // here rather than reading the state inside the effect, which would log the first screen twice.
+    val currentEntry = backStackEntry
+    LaunchedEffect(currentEntry?.id) {
+        currentEntry?.destination?.analyticsScreen()?.let(onScreenViewed)
+    }
     // The bar only shows on Today, Saved and You; reading screens get the full height.
     val currentTab = backStackEntry?.destination.topLevelDestination()
 

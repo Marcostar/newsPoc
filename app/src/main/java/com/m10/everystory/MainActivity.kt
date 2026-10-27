@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
             }
 
             EveryStoryTheme(darkTheme = darkTheme) {
-                EveryStoryApp()
+                EveryStoryApp(onScreenViewed = viewModel::onScreenViewed)
             }
         }
     }

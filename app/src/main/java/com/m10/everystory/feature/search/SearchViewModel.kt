@@ -8,6 +8,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.m10.everystory.EveryStoryApplication
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.core.analytics.AnalyticsScreen
+import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.repository.NewsRepository
@@ -27,6 +30,7 @@ private const val QUERY_KEY = "query"
 class SearchViewModel(
     private val newsRepository: NewsRepository,
     private val recentSearchesRepository: RecentSearchesRepository,
+    private val analytics: AnalyticsTracker,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -134,6 +138,7 @@ class SearchViewModel(
 
     private suspend fun runSearch(query: String) {
         loadMoreJob?.cancel()
+        analytics.log(AnalyticsEvent.Search(query))
         _uiState.update {
             it.copy(
                 results = SearchResults.Loading,
@@ -154,7 +159,10 @@ class SearchViewModel(
                     )
                 }
             }
-            is AppResult.Failure -> _uiState.update { it.copy(results = SearchResults.Failed(result.error)) }
+            is AppResult.Failure -> {
+                analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Search, result.error))
+                _uiState.update { it.copy(results = SearchResults.Failed(result.error)) }
+            }
         }
     }
 
@@ -169,6 +177,7 @@ class SearchViewModel(
                 SearchViewModel(
                     newsRepository = app.container.newsRepository,
                     recentSearchesRepository = app.container.recentSearchesRepository,
+                    analytics = app.container.analyticsTracker,
                     savedStateHandle = createSavedStateHandle(),
                 )
             }

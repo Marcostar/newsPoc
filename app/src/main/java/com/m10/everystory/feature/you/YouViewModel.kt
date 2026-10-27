@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.m10.everystory.EveryStoryApplication
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.domain.model.ThemeSetting
 import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +22,7 @@ data class YouUiState(
 
 class YouViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val analytics: AnalyticsTracker,
 ) : ViewModel() {
 
     val uiState: StateFlow<YouUiState> = userPreferencesRepository.themeSetting
@@ -28,6 +31,7 @@ class YouViewModel(
 
     // The whole app re-themes from the same preference, so there's nothing else to update here.
     fun onThemeSelected(setting: ThemeSetting) {
+        analytics.log(AnalyticsEvent.ThemeChange(setting))
         viewModelScope.launch { userPreferencesRepository.setThemeSetting(setting) }
     }
 
@@ -37,7 +41,7 @@ class YouViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as EveryStoryApplication
-                YouViewModel(app.container.userPreferencesRepository)
+                YouViewModel(app.container.userPreferencesRepository, app.container.analyticsTracker)
             }
         }
     }

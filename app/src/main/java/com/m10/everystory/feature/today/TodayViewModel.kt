@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.m10.everystory.EveryStoryApplication
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.core.analytics.AnalyticsScreen
+import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.ArticlePage
@@ -21,6 +24,7 @@ import java.time.Instant
 
 class TodayViewModel(
     private val newsRepository: NewsRepository,
+    private val analytics: AnalyticsTracker,
     private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
 
@@ -37,6 +41,7 @@ class TodayViewModel(
 
     fun onCategorySelected(category: NewsCategory?) {
         if (category == _uiState.value.selectedCategory) return
+        analytics.log(AnalyticsEvent.TopicSelect(category))
         _uiState.update {
             it.copy(
                 selectedCategory = category,
@@ -57,6 +62,7 @@ class TodayViewModel(
     fun onRefresh() {
         val state = _uiState.value
         if (state.isRefreshing) return
+        analytics.log(AnalyticsEvent.FeedRefresh)
         if (state.articles.isEmpty()) return onRetry()
 
         cancelLoading()
@@ -70,8 +76,11 @@ class TodayViewModel(
                     val newStories = result.data.articles.count { it.key !in previousKeys }
                     showFirstPage(result.data, RefreshOutcome.Updated(newStories))
                 }
-                is AppResult.Failure -> _uiState.update {
-                    it.copy(isRefreshing = false, lastRefresh = RefreshOutcome.Failed(result.error))
+                is AppResult.Failure -> {
+                    analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Today, result.error))
+                    _uiState.update {
+                        it.copy(isRefreshing = false, lastRefresh = RefreshOutcome.Failed(result.error))
+                    }
                 }
             }
         }
@@ -114,8 +123,11 @@ class TodayViewModel(
         feedJob = viewModelScope.launch {
             when (val result = newsRepository.topHeadlines(page = 1, category = category)) {
                 is AppResult.Success -> showFirstPage(result.data, refresh = null)
-                is AppResult.Failure -> _uiState.update {
-                    it.copy(isLaunching = false, feedStatus = FeedStatus.Failed(result.error))
+                is AppResult.Failure -> {
+                    analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Today, result.error))
+                    _uiState.update {
+                        it.copy(isLaunching = false, feedStatus = FeedStatus.Failed(result.error))
+                    }
                 }
             }
         }
@@ -151,7 +163,7 @@ class TodayViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as EveryStoryApplication
-                TodayViewModel(app.container.newsRepository)
+                TodayViewModel(app.container.newsRepository, app.container.analyticsTracker)
             }
         }
     }

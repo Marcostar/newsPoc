@@ -1,9 +1,11 @@
 package com.m10.everystory.feature.search
 
 import androidx.lifecycle.SavedStateHandle
+import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
+import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeRecentSearchesRepository
 import com.m10.everystory.testing.MainDispatcherRule
@@ -26,9 +28,10 @@ class SearchViewModelTest {
 
     private val news = FakeNewsRepository()
     private val recent = FakeRecentSearchesRepository()
+    private val analytics = FakeAnalyticsTracker()
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-        SearchViewModel(news, recent, savedState)
+        SearchViewModel(news, recent, analytics, savedState)
 
     @Test
     fun `typing waits for a pause before searching`() = runTest {
@@ -191,5 +194,19 @@ class SearchViewModelTest {
 
         assertEquals("levee", restored.uiState.value.query)
         assertEquals(SearchResults.Loaded, restored.uiState.value.results)
+    }
+
+    @Test
+    fun `each search sent to the server is tracked once`() = runTest {
+        news.searchResults += testPage(1, listOf("a"))
+        val viewModel = createViewModel()
+
+        viewModel.onQueryChange("lev")
+        viewModel.onQueryChange("levee")
+        advanceUntilIdle()
+        viewModel.onSubmit()
+        advanceUntilIdle()
+
+        assertEquals(listOf(AnalyticsEvent.Search("levee")), analytics.events)
     }
 }

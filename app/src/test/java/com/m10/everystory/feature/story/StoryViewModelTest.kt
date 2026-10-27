@@ -1,5 +1,7 @@
 package com.m10.everystory.feature.story
 
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeSavedArticlesRepository
 import com.m10.everystory.testing.MainDispatcherRule
@@ -26,10 +28,11 @@ class StoryViewModelTest {
 
     private val news = FakeNewsRepository()
     private val saved = FakeSavedArticlesRepository()
+    private val analytics = FakeAnalyticsTracker()
     private val article = testArticle("a")
 
     // uiState is WhileSubscribed, so collect it the way the screen does.
-    private fun TestScope.createViewModel(key: String = "a") = StoryViewModel(key, news, saved).also { viewModel ->
+    private fun TestScope.createViewModel(key: String = "a") = StoryViewModel(key, news, saved, analytics).also { viewModel ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
     }
 
@@ -108,5 +111,26 @@ class StoryViewModelTest {
         viewModel.onUndo(StoryMessage.Removed)
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.isSaved)
+    }
+
+    @Test
+    fun `opening, saving and reading in full are tracked with the source`() = runTest {
+        news.cachedArticles["a"] = article
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+        viewModel.onReadFullStory()
+
+        val source = article.source.name
+        assertEquals(
+            listOf(
+                AnalyticsEvent.StoryOpen(source),
+                AnalyticsEvent.StorySave(source),
+                AnalyticsEvent.StoryLinkOut(source),
+            ),
+            analytics.events,
+        )
     }
 }

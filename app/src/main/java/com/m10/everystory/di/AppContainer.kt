@@ -6,7 +6,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.m10.everystory.BuildConfig
+import com.m10.everystory.core.analytics.AnalyticsTracker
+import com.m10.everystory.core.analytics.FirebaseAnalyticsTracker
 import com.m10.everystory.core.database.EveryStoryDatabase
 import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
@@ -41,6 +44,7 @@ interface AppContainer {
     val recentSearchesRepository: RecentSearchesRepository
     val userPreferencesRepository: UserPreferencesRepository
     val savedArticlesRepository: SavedArticlesRepository
+    val analyticsTracker: AnalyticsTracker
 }
 
 class DefaultAppContainer(
@@ -96,6 +100,10 @@ class DefaultAppContainer(
 
     override val userPreferencesRepository: UserPreferencesRepository by lazy {
         DataStoreUserPreferencesRepository(preferences)
+    }
+
+    override val analyticsTracker: AnalyticsTracker by lazy {
+        FirebaseAnalyticsTracker(FirebaseAnalytics.getInstance(context))
     }
 
     private fun loggingInterceptor() =

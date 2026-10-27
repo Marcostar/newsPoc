@@ -1,6 +1,8 @@
 package com.m10.everystory.feature.you
 
+import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.domain.model.ThemeSetting
+import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,10 +22,11 @@ class YouViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val preferences = FakeUserPreferencesRepository()
+    private val analytics = FakeAnalyticsTracker()
 
     @Test
     fun `choosing a theme saves it and the screen reflects it`() = runTest {
-        val viewModel = YouViewModel(preferences)
+        val viewModel = YouViewModel(preferences, analytics)
         // WhileSubscribed only updates while someone is collecting, like the screen does.
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
 
@@ -32,5 +35,6 @@ class YouViewModelTest {
 
         assertEquals(ThemeSetting.Dark, preferences.themeSetting.first())
         assertEquals(ThemeSetting.Dark, viewModel.uiState.value.themeSetting)
+        assertEquals(listOf(AnalyticsEvent.ThemeChange(ThemeSetting.Dark)), analytics.events)
     }
 }

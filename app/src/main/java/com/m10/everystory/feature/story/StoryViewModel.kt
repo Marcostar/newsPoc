@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.m10.everystory.EveryStoryApplication
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.SavedArticlesRepository
@@ -35,6 +37,7 @@ class StoryViewModel(
     private val articleKey: String,
     private val newsRepository: NewsRepository,
     private val savedArticlesRepository: SavedArticlesRepository,
+    private val analytics: AnalyticsTracker,
 ) : ViewModel() {
 
     private val content = MutableStateFlow<StoryContent>(StoryContent.Loading)
@@ -50,6 +53,7 @@ class StoryViewModel(
             // The cache is pruned after a week; a saved story keeps its own copy, so try that next.
             val article = newsRepository.article(articleKey) ?: savedArticlesRepository.savedArticle(articleKey)
             content.value = article?.let { StoryContent.Ready(it) } ?: StoryContent.NotFound
+            article?.let { analytics.log(AnalyticsEvent.StoryOpen(it.source.name)) }
         }
     }
 
@@ -59,9 +63,11 @@ class StoryViewModel(
             if (savedArticlesRepository.isSaved(articleKey).first()) {
                 savedArticlesRepository.remove(articleKey)
                 message.value = StoryMessage.Removed
+                analytics.log(AnalyticsEvent.StoryUnsave(article.source.name))
             } else {
                 savedArticlesRepository.save(article)
                 message.value = StoryMessage.Saved
+                analytics.log(AnalyticsEvent.StorySave(article.source.name))
             }
         }
     }
@@ -76,6 +82,12 @@ class StoryViewModel(
         }
     }
 
+    // The Custom Tab itself is opened by the screen; it needs a Context.
+    fun onReadFullStory() {
+        val article = (content.value as? StoryContent.Ready)?.article ?: return
+        analytics.log(AnalyticsEvent.StoryLinkOut(article.source.name))
+    }
+
     fun onMessageShown() {
         message.value = null
     }
@@ -86,7 +98,12 @@ class StoryViewModel(
         fun factory(articleKey: String) = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as EveryStoryApplication
-                StoryViewModel(articleKey, app.container.newsRepository, app.container.savedArticlesRepository)
+                StoryViewModel(
+                    articleKey = articleKey,
+                    newsRepository = app.container.newsRepository,
+                    savedArticlesRepository = app.container.savedArticlesRepository,
+                    analytics = app.container.analyticsTracker,
+                )
             }
         }
     }

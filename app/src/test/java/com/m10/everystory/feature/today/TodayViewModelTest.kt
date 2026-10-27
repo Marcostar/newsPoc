@@ -1,9 +1,12 @@
 package com.m10.everystory.feature.today
 
+import com.m10.everystory.core.analytics.AnalyticsEvent
+import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.testing.FakeAnalyticsTracker
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testPage
@@ -24,9 +27,10 @@ class TodayViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repository = FakeNewsRepository()
+    private val analytics = FakeAnalyticsTracker()
     private val fixedNow = Instant.parse("2026-10-26T09:30:00Z")
 
-    private fun createViewModel() = TodayViewModel(repository, now = { fixedNow })
+    private fun createViewModel() = TodayViewModel(repository, analytics, now = { fixedNow })
 
     @Test
     fun `first load shows headlines and ends the launch screen`() = runTest {
@@ -151,5 +155,28 @@ class TodayViewModelTest {
 
         assertEquals(1 to NewsCategory.Health, repository.headlineRequests.last())
         assertEquals(listOf("h"), viewModel.uiState.value.articles.map { it.key })
+    }
+
+    @Test
+    fun `refresh, topic and a failed load are tracked`() = runTest {
+        repository.headlineResults += testPage(1, listOf("a"))
+        repository.headlineResults += AppResult.Failure(AppError.Unauthorized)
+        repository.headlineResults += testPage(1, listOf("h"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onRefresh()
+        advanceUntilIdle()
+        viewModel.onCategorySelected(NewsCategory.Health)
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                AnalyticsEvent.FeedRefresh,
+                AnalyticsEvent.LoadError(AnalyticsScreen.Today, AppError.Unauthorized),
+                AnalyticsEvent.TopicSelect(NewsCategory.Health),
+            ),
+            analytics.events,
+        )
     }
 }

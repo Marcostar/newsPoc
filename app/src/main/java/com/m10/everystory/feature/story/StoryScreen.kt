@@ -84,7 +84,10 @@ fun StoryRoute(
         onToggleSave = viewModel::onToggleSave,
         onUndo = viewModel::onUndo,
         onMessageShown = viewModel::onMessageShown,
-        onReadFullStory = { url -> context.openInCustomTab(url, toolbarColor) },
+        onReadFullStory = { url ->
+            viewModel.onReadFullStory()
+            context.openInCustomTab(url, toolbarColor)
+        },
     )
 }
 
