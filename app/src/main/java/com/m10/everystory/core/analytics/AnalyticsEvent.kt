@@ -49,6 +49,13 @@ sealed class AnalyticsEvent(
     data class LanguageChange(val language: NewsLanguage) :
         AnalyticsEvent("language_change", mapOf("language" to language.code))
 
+    // Google Analytics' recommended ad events, so they line up with AdMob's own reports.
+    data object AdImpression :
+        AnalyticsEvent("ad_impression", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
+
+    data object AdClick :
+        AnalyticsEvent("ad_click", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
+
     data object TourComplete : AnalyticsEvent("tour_complete")
 
     // Which tip people give up on says more than the skip itself.

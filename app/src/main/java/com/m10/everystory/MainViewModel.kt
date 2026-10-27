@@ -38,6 +38,10 @@ class MainViewModel(
         analytics.log(AnalyticsEvent.ScreenView(screen))
     }
 
+    fun onAdImpression() = analytics.log(AnalyticsEvent.AdImpression)
+
+    fun onAdClick() = analytics.log(AnalyticsEvent.AdClick)
+
     companion object {
         val Factory = viewModelFactory {
             initializer {

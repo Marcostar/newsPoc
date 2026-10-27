@@ -145,6 +145,10 @@
     <string name="language_english_fr">French</string>
     <string name="language_english_ar">Arabic</string>
 
+    <!-- Ads -->
+    <string name="ad_label">Ad</string>
+    <string name="ad_description">Advertisement</string>
+
     <!-- App tour -->
     <plurals name="you_tour_detail">
         <item quantity="one">%1$d quick tip on Today · about 30 seconds</item>

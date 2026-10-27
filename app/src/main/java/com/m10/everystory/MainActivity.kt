@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
@@ -23,6 +24,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         splashScreen.setKeepOnScreenCondition { viewModel.appearance.value == null }
 
+        // The consent form needs an Activity, so the activity starts it; ads wait for the answer.
+        val adConsent = (application as EveryStoryApplication).container.adConsent
+        adConsent.gather(this)
+
         setContent {
             val appearance = viewModel.appearance.collectAsStateWithLifecycle().value ?: Appearance()
             val darkTheme = appearance.themeSetting.isDark(isSystemInDarkTheme())
@@ -35,7 +40,13 @@ class MainActivity : ComponentActivity() {
             }
 
             EveryStoryTheme(darkTheme = darkTheme, textScale = appearance.textScale) {
-                EveryStoryApp(onScreenViewed = viewModel::onScreenViewed)
+                val canShowAds by adConsent.canShowAds.collectAsStateWithLifecycle()
+                EveryStoryApp(
+                    onScreenViewed = viewModel::onScreenViewed,
+                    showAds = canShowAds,
+                    onAdImpression = viewModel::onAdImpression,
+                    onAdClick = viewModel::onAdClick,
+                )
             }
         }
     }

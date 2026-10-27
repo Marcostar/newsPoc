@@ -8,6 +8,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.m10.everystory.BuildConfig
+import com.m10.everystory.core.ads.AdConsent
 import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.analytics.FirebaseAnalyticsTracker
 import com.m10.everystory.core.database.EveryStoryDatabase
@@ -45,6 +46,7 @@ interface AppContainer {
     val userPreferencesRepository: UserPreferencesRepository
     val savedArticlesRepository: SavedArticlesRepository
     val analyticsTracker: AnalyticsTracker
+    val adConsent: AdConsent
 }
 
 class DefaultAppContainer(
@@ -105,6 +107,8 @@ class DefaultAppContainer(
     override val analyticsTracker: AnalyticsTracker by lazy {
         FirebaseAnalyticsTracker(FirebaseAnalytics.getInstance(context))
     }
+
+    override val adConsent: AdConsent by lazy { AdConsent(context) }
 
     private fun loggingInterceptor() =
         HttpLoggingInterceptor { message -> Timber.tag("OkHttp").d(message) }.apply {

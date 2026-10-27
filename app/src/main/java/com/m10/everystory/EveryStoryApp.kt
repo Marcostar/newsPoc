@@ -5,6 +5,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.m10.everystory.core.ads.AdBanner
 import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
@@ -47,7 +49,12 @@ import com.m10.everystory.navigation.navigateToTopLevel
 import com.m10.everystory.navigation.topLevelDestination
 
 @Composable
-fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
+fun EveryStoryApp(
+    onScreenViewed: (AnalyticsScreen) -> Unit,
+    showAds: Boolean,
+    onAdImpression: () -> Unit,
+    onAdClick: () -> Unit,
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
 
@@ -85,21 +92,28 @@ fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
                 modifier = if (tourStep != null) Modifier.clearAndSetSemantics {} else Modifier,
                 bottomBar = {
                     if (currentTab != null) {
-                        EsNavBar(
-                            items = TopLevelDestination.entries.map { destination ->
-                                EsNavItem(
-                                    icon = destination.icon,
-                                    label = stringResource(destination.labelRes),
-                                    selected = destination == currentTab,
-                                    onClick = { navController.navigateToTopLevel(destination) },
-                                    modifier = when (destination) {
-                                        TopLevelDestination.Saved -> Modifier.tourTarget(tourTargets, TourStep.Saved)
-                                        TopLevelDestination.You -> Modifier.tourTarget(tourTargets, TourStep.You)
-                                        TopLevelDestination.Today -> Modifier
-                                    },
-                                )
-                            },
-                        )
+                        Column {
+                            // One banner, on Saved only: it has room to spare, while Today stays uncluttered.
+                            // Never while reading, never in settings.
+                            if (showAds && currentTab == TopLevelDestination.Saved) {
+                                AdBanner(onImpression = onAdImpression, onClick = onAdClick)
+                            }
+                            EsNavBar(
+                                items = TopLevelDestination.entries.map { destination ->
+                                    EsNavItem(
+                                        icon = destination.icon,
+                                        label = stringResource(destination.labelRes),
+                                        selected = destination == currentTab,
+                                        onClick = { navController.navigateToTopLevel(destination) },
+                                        modifier = when (destination) {
+                                            TopLevelDestination.Saved -> Modifier.tourTarget(tourTargets, TourStep.Saved)
+                                            TopLevelDestination.You -> Modifier.tourTarget(tourTargets, TourStep.You)
+                                            TopLevelDestination.Today -> Modifier
+                                        },
+                                    )
+                                },
+                            )
+                        }
                     }
                 },
             ) { innerPadding ->
