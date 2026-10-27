@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Status bar icon: the EveryStory mark in white; Android tints it and only uses the shape. -->
+<!-- Status bar icon: the EveryStory mark in white; Android tints it and only uses the shape.
+     Not the launcher's monochrome layer: that one is shrunk for the adaptive-icon safe zone and
+     looked half-size next to other apps. Here the mark (x 6–74, y 2–68 in the original units)
+     fills 22 of the 24dp, the usual 1dp padding. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <group android:scaleX="0.62" android:scaleY="0.62" android:translateX="31.06" android:translateY="32.92">
+    android:viewportWidth="24" android:viewportHeight="24">
+    <group android:scaleX="0.3235" android:scaleY="0.3235" android:translateX="-0.94" android:translateY="0.68">
         <path android:fillColor="#FFFFFF" android:pathData="M24,11 A12,19 0 0 1 12,30 A2,19 0 0 0 14,11 Z"/>
         <path android:fillColor="#FFFFFF" android:pathData="M6,11 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0 Z"/>
         <path android:fillColor="#FFFFFF" android:pathData="M50,11 A12,19 0 0 1 38,30 A2,19 0 0 0 40,11 Z"/>
