@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,8 +50,11 @@ import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.core.designsystem.theme.EsTheme
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
 import com.m10.everystory.core.ui.LoadMoreWhenNearEnd
+import com.m10.everystory.core.ui.LocalTourTargets
+import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.clockTimeText
 import com.m10.everystory.core.ui.toErrorMessage
+import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.ArticleSource
 import com.m10.everystory.domain.model.NewsCategory
@@ -70,10 +74,16 @@ private val topics: List<Pair<NewsCategory?, Int>> = listOf(
 @Composable
 fun TodayRoute(
     viewModel: TodayViewModel,
+    isTourRunning: Boolean,
     onSearchClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    // The tour points at the chips and the lead story, so start it from the top of the feed.
+    LaunchedEffect(isTourRunning) {
+        if (isTourRunning) listState.scrollToItem(0)
+    }
     TodayScreen(
         uiState = uiState,
         onSearchClick = onSearchClick,
@@ -83,6 +93,7 @@ fun TodayRoute(
         onLoadMore = viewModel::onLoadMore,
         onRetryLoadMore = viewModel::onRetryLoadMore,
         onCategorySelected = viewModel::onCategorySelected,
+        listState = listState,
     )
 }
 
@@ -100,6 +111,7 @@ fun TodayScreen(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
 ) {
+    val tourTargets = LocalTourTargets.current
     Column(modifier = modifier.fillMaxSize()) {
         EsLogoLockup(
             modifier = Modifier
@@ -108,7 +120,9 @@ fun TodayScreen(
         )
         EsSearchBarButton(
             onClick = onSearchClick,
-            modifier = Modifier.padding(start = EsSpace.s16, end = EsSpace.s16, top = EsSpace.s4, bottom = EsSpace.s8),
+            modifier = Modifier
+                .padding(start = EsSpace.s16, end = EsSpace.s16, top = EsSpace.s4, bottom = EsSpace.s8)
+                .tourTarget(tourTargets, TourStep.Search),
         )
 
         LoadMoreWhenNearEnd(listState, onLoadMore)
@@ -127,9 +141,20 @@ fun TodayScreen(
                     TodayHeading(uiState = uiState, onRefresh = onRefresh)
                 }
                 item(key = "topics") {
-                    TopicChips(selected = uiState.selectedCategory, onSelected = onCategorySelected)
+                    TopicChips(
+                        selected = uiState.selectedCategory,
+                        onSelected = onCategorySelected,
+                        modifier = Modifier.tourTarget(tourTargets, TourStep.Topics),
+                    )
                 }
-                feedItems(uiState, onArticleClick, onRetry, onRetryLoadMore, onCategorySelected)
+                feedItems(
+                    uiState = uiState,
+                    onArticleClick = onArticleClick,
+                    onRetry = onRetry,
+                    onRetryLoadMore = onRetryLoadMore,
+                    onCategorySelected = onCategorySelected,
+                    leadModifier = Modifier.tourTarget(tourTargets, TourStep.LeadStory),
+                )
             }
         }
     }
@@ -141,6 +166,7 @@ private fun LazyListScope.feedItems(
     onRetry: () -> Unit,
     onRetryLoadMore: () -> Unit,
     onCategorySelected: (NewsCategory?) -> Unit,
+    leadModifier: Modifier,
 ) {
     val itemModifier = Modifier.padding(horizontal = EsSpace.screen)
     when (val status = uiState.feedStatus) {
@@ -177,7 +203,9 @@ private fun LazyListScope.feedItems(
                 LeadStoryCard(
                     article = lead,
                     onClick = { onArticleClick(lead) },
-                    modifier = itemModifier.padding(bottom = EsSpace.s8),
+                    modifier = itemModifier
+                        .padding(bottom = EsSpace.s8)
+                        .then(leadModifier),
                 )
             }
             items(uiState.articles.drop(1), key = { it.key }) { article ->
@@ -253,10 +281,18 @@ private fun statusLine(uiState: TodayUiState): String? {
 }
 
 @Composable
-private fun TopicChips(selected: NewsCategory?, onSelected: (NewsCategory?) -> Unit) {
+private fun TopicChips(
+    selected: NewsCategory?,
+    onSelected: (NewsCategory?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Vertical space sits outside the caller's modifier so the tour ring hugs the chips.
     LazyRow(
+        modifier = Modifier
+            .padding(top = EsSpace.s4, bottom = EsSpace.s16)
+            .then(modifier),
         horizontalArrangement = Arrangement.spacedBy(EsSpace.s8),
-        contentPadding = PaddingValues(start = EsSpace.screen, end = EsSpace.screen, top = EsSpace.s4, bottom = EsSpace.s16),
+        contentPadding = PaddingValues(horizontal = EsSpace.screen),
     ) {
         items(topics, key = { (category, _) -> category?.name ?: "all" }) { (category, label) ->
             EsTopicChip(

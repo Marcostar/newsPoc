@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -24,7 +27,13 @@ import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
 import com.m10.everystory.core.designsystem.component.EsNavItem
 import com.m10.everystory.core.designsystem.theme.EsMotion
+import com.m10.everystory.core.ui.LocalTourTargets
+import com.m10.everystory.core.ui.TourStep
+import com.m10.everystory.core.ui.TourTargets
+import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.feature.today.TodayViewModel
+import com.m10.everystory.feature.tour.TourOverlay
+import com.m10.everystory.feature.tour.TourViewModel
 import com.m10.everystory.navigation.EsNavHost
 import com.m10.everystory.navigation.TopLevelDestination
 import com.m10.everystory.navigation.analyticsScreen
@@ -50,40 +59,67 @@ fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
     val todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory)
     val todayState by todayViewModel.uiState.collectAsStateWithLifecycle()
 
-    Box {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
-            bottomBar = {
-                if (currentTab != null) {
-                    EsNavBar(
-                        items = TopLevelDestination.entries.map { destination ->
-                            EsNavItem(
-                                icon = destination.icon,
-                                label = stringResource(destination.labelRes),
-                                selected = destination == currentTab,
-                                onClick = { navController.navigateToTopLevel(destination) },
-                            )
-                        },
-                    )
-                }
-            },
-        ) { innerPadding ->
-            EsNavHost(
-                navController = navController,
-                todayViewModel = todayViewModel,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .consumeWindowInsets(innerPadding),
-            )
-        }
+    val tourViewModel: TourViewModel = viewModel(factory = TourViewModel.Factory)
+    val tourState by tourViewModel.uiState.collectAsStateWithLifecycle()
+    val tourTargets = remember { TourTargets() }
+    // Waits for the launch screen, so the first tip lands on a real feed.
+    val tourStep = tourState.step.takeUnless { todayState.isLaunching }
 
-        AnimatedVisibility(
-            visible = todayState.isLaunching,
-            enter = EnterTransition.None,
-            exit = fadeOut(tween(EsMotion.ENTER_EXIT_MS)),
-        ) {
-            EsLaunchScreen()
+    CompositionLocalProvider(LocalTourTargets provides tourTargets) {
+        Box {
+            Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
+                // While the tour is up, TalkBack only reads the tour.
+                modifier = if (tourStep != null) Modifier.clearAndSetSemantics {} else Modifier,
+                bottomBar = {
+                    if (currentTab != null) {
+                        EsNavBar(
+                            items = TopLevelDestination.entries.map { destination ->
+                                EsNavItem(
+                                    icon = destination.icon,
+                                    label = stringResource(destination.labelRes),
+                                    selected = destination == currentTab,
+                                    onClick = { navController.navigateToTopLevel(destination) },
+                                    modifier = when (destination) {
+                                        TopLevelDestination.Saved -> Modifier.tourTarget(tourTargets, TourStep.Saved)
+                                        TopLevelDestination.You -> Modifier.tourTarget(tourTargets, TourStep.You)
+                                        TopLevelDestination.Today -> Modifier
+                                    },
+                                )
+                            },
+                        )
+                    }
+                },
+            ) { innerPadding ->
+                EsNavHost(
+                    navController = navController,
+                    todayViewModel = todayViewModel,
+                    isTourRunning = tourStep != null,
+                    onStartTour = tourViewModel::onStart,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .consumeWindowInsets(innerPadding),
+                )
+            }
+
+            if (tourStep != null) {
+                TourOverlay(
+                    step = tourStep,
+                    targetBounds = tourTargets.boundsOf(tourStep),
+                    onNext = tourViewModel::onNext,
+                    onBack = tourViewModel::onBack,
+                    onSkip = tourViewModel::onSkip,
+                )
+            }
+
+            AnimatedVisibility(
+                visible = todayState.isLaunching,
+                enter = EnterTransition.None,
+                exit = fadeOut(tween(EsMotion.ENTER_EXIT_MS)),
+            ) {
+                EsLaunchScreen()
+            }
         }
     }
 }

@@ -28,6 +28,10 @@
     <string name="you_news_source">News from NewsAPI.org</string>
     <string name="you_news_source_detail">Headlines and search results come from NewsAPI.</string>
     <string name="you_news_source_description">News from NewsAPI.org, opens in browser</string>
+    <string name="you_help">Help</string>
+    <string name="you_tour">App tour</string>
+    <string name="you_tour_detail">5 quick tips on Today · about 30 seconds</string>
+    <string name="you_tour_description">App tour, 5 quick tips on Today</string>
     <string name="clear">Clear</string>
 
     <string name="recent_searches">Recent searches</string>
@@ -108,4 +112,22 @@
     <string name="error_rate_limited_title">Too many requests</string>
     <string name="error_rate_limited_body">Try again in a minute.</string>
     <string name="error_unknown_body">Something went wrong on our side. Try again.</string>
+
+    <!-- App tour -->
+    <string name="tour_pane_title">App tour</string>
+    <string name="tour_count">App tour · %1$d of %2$d</string>
+    <string name="tour_skip">Skip</string>
+    <string name="tour_back">Back</string>
+    <string name="tour_next">Next</string>
+    <string name="tour_finish">Start reading</string>
+    <string name="tour_search_title">Search sits at the top</string>
+    <string name="tour_search_text">Find any story by keyword, place or person. Results start as you type.</string>
+    <string name="tour_topics_title">Pick a topic</string>
+    <string name="tour_topics_text">Narrow Today to business, health, science, sports, tech or entertainment.</string>
+    <string name="tour_story_title">Open a story</string>
+    <string name="tour_story_text">See who reported it and when, save it for later, or read it in full on the publisher\'s site.</string>
+    <string name="tour_saved_title">Keep stories for later</string>
+    <string name="tour_saved_text">Stories you save wait here, and they open without a connection.</string>
+    <string name="tour_you_title">Make it yours</string>
+    <string name="tour_you_text">Choose light or dark, and replay this tour, under You.</string>
 </resources>

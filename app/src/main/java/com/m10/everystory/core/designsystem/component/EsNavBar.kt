@@ -20,6 +20,7 @@ data class EsNavItem(
     val label: String,
     val selected: Boolean,
     val onClick: () -> Unit,
+    val modifier: Modifier = Modifier,
 )
 
 // The active tab gets a sage pill, a bold label and brand colour, so it never relies on colour alone.
@@ -38,6 +39,7 @@ fun EsNavBar(
                 NavigationBarItem(
                     selected = item.selected,
                     onClick = item.onClick,
+                    modifier = item.modifier,
                     icon = { Icon(item.icon, contentDescription = null) },
                     label = {
                         Text(

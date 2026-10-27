@@ -20,6 +20,8 @@ import com.m10.everystory.feature.you.YouRoute
 fun EsNavHost(
     navController: NavHostController,
     todayViewModel: TodayViewModel,
+    isTourRunning: Boolean,
+    onStartTour: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -30,6 +32,7 @@ fun EsNavHost(
         composable<TodayDestination> {
             TodayRoute(
                 viewModel = todayViewModel,
+                isTourRunning = isTourRunning,
                 onSearchClick = { navController.navigate(SearchDestination) },
                 onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
             )
@@ -41,7 +44,14 @@ fun EsNavHost(
             )
         }
         composable<YouDestination> {
-            YouRoute(onClose = { navController.navigateToTopLevel(TopLevelDestination.Today) })
+            YouRoute(
+                onClose = { navController.navigateToTopLevel(TopLevelDestination.Today) },
+                // The tour runs on Today, so replaying it takes you there.
+                onStartTour = {
+                    onStartTour()
+                    navController.navigateToTopLevel(TopLevelDestination.Today)
+                },
+            )
         }
         composable<SearchDestination> {
             SearchRoute(

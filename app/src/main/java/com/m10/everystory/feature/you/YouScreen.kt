@@ -49,6 +49,7 @@ private val themeOptions = listOf(ThemeSetting.Light, ThemeSetting.Dark, ThemeSe
 @Composable
 fun YouRoute(
     onClose: () -> Unit,
+    onStartTour: () -> Unit,
     viewModel: YouViewModel = viewModel(factory = YouViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -60,6 +61,7 @@ fun YouRoute(
         versionCode = BuildConfig.VERSION_CODE,
         onClose = onClose,
         onThemeSelected = viewModel::onThemeSelected,
+        onStartTour = onStartTour,
         onNewsApiClick = { context.openInCustomTab(NEWS_API_URL, toolbarColor) },
     )
 }
@@ -71,6 +73,7 @@ fun YouScreen(
     versionCode: Int,
     onClose: () -> Unit,
     onThemeSelected: (ThemeSetting) -> Unit,
+    onStartTour: () -> Unit,
     onNewsApiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,6 +92,15 @@ fun YouScreen(
                 selected = uiState.themeSetting,
                 label = { setting -> stringResource(setting.labelRes()) },
                 onSelect = onThemeSelected,
+            )
+
+            SectionLabel(stringResource(R.string.you_help))
+            AboutRow(
+                icon = EsIcons.Tour,
+                title = stringResource(R.string.you_tour),
+                subtitle = stringResource(R.string.you_tour_detail),
+                onClick = onStartTour,
+                clickDescription = stringResource(R.string.you_tour_description),
             )
 
             SectionLabel(stringResource(R.string.you_about))
@@ -207,6 +219,7 @@ private fun YouScreenPreview() {
             versionCode = 1,
             onClose = {},
             onThemeSelected = {},
+            onStartTour = {},
             onNewsApiClick = {},
         )
     }

@@ -48,6 +48,7 @@ data class EsColors(
     val placeholderA: Color,
     val placeholderB: Color,
     val sageMark: Color,
+    val scrim: Color,
 )
 
 val DayEsColors = EsColors(
@@ -66,6 +67,7 @@ val DayEsColors = EsColors(
     placeholderA = Color(0xFFE4E9DC),
     placeholderB = Color(0xFFD9E1D0),
     sageMark = Color(0xFF8FAE9F),
+    scrim = Color(0xA80F1B1A), // page ink at 66%, same in both themes
 )
 
 val NightEsColors = EsColors(
@@ -84,6 +86,7 @@ val NightEsColors = EsColors(
     placeholderA = Color(0xFF1C2D2A),
     placeholderB = Color(0xFF223532),
     sageMark = Color(0xFF8FAE9F),
+    scrim = Color(0xA80F1B1A),
 )
 
 val LocalEsColors = staticCompositionLocalOf { DayEsColors }

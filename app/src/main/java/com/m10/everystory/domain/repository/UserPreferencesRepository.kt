@@ -7,4 +7,8 @@ interface UserPreferencesRepository {
     val themeSetting: Flow<ThemeSetting>
 
     suspend fun setThemeSetting(setting: ThemeSetting)
+
+    val tourSeen: Flow<Boolean>
+
+    suspend fun setTourSeen()
 }

@@ -1,6 +1,7 @@
 package com.m10.everystory.core.analytics
 
 import com.m10.everystory.core.common.AppError
+import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.ThemeSetting
 
@@ -37,6 +38,12 @@ sealed class AnalyticsEvent(
 
     data class StoryUnsave(val source: String) :
         AnalyticsEvent("story_unsave", mapOf("source" to source))
+
+    data object TourComplete : AnalyticsEvent("tour_complete")
+
+    // Which tip people give up on says more than the skip itself.
+    data class TourSkip(val step: TourStep) :
+        AnalyticsEvent("tour_skip", mapOf("step" to (step.ordinal + 1).toString()))
 
     data class ThemeChange(val theme: ThemeSetting) :
         AnalyticsEvent("theme_change", mapOf("theme" to theme.name.lowercase()))

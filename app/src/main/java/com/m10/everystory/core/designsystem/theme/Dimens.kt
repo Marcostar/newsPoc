@@ -41,6 +41,10 @@ object EsSize {
     val sourceBadge = 40.dp
     val sourceButton = 64.dp
     val snackbarClearance = 96.dp // room to scroll content clear of a snackbar
+    val spotlightRing = 3.dp
+    val spotlightCorner = 16.dp
+    val tourDot = 8.dp
+    val tourDotActive = 20.dp
 }
 
 object EsRadius {
