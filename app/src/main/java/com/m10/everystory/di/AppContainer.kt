@@ -12,9 +12,11 @@ import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.data.news.DefaultNewsRepository
 import com.m10.everystory.data.news.remote.NewsApiService
+import com.m10.everystory.data.preferences.DataStoreUserPreferencesRepository
 import com.m10.everystory.data.search.DataStoreRecentSearchesRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
+import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -35,6 +37,7 @@ private const val DATABASE_FILE = "everystory.db"
 interface AppContainer {
     val newsRepository: NewsRepository
     val recentSearchesRepository: RecentSearchesRepository
+    val userPreferencesRepository: UserPreferencesRepository
 }
 
 class DefaultAppContainer(
@@ -79,8 +82,13 @@ class DefaultAppContainer(
         PreferenceDataStoreFactory.create { context.preferencesDataStoreFile(PREFERENCES_FILE) }
     }
 
+    // One DataStore per file: both preference repositories share it.
     override val recentSearchesRepository: RecentSearchesRepository by lazy {
         DataStoreRecentSearchesRepository(preferences)
+    }
+
+    override val userPreferencesRepository: UserPreferencesRepository by lazy {
+        DataStoreUserPreferencesRepository(preferences)
     }
 
     private fun loggingInterceptor() =

@@ -23,6 +23,7 @@ import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.story.StoryRoute
 import com.m10.everystory.feature.today.TodayRoute
 import com.m10.everystory.feature.today.TodayViewModel
+import com.m10.everystory.feature.you.YouRoute
 
 @Composable
 fun EsNavHost(
@@ -43,7 +44,9 @@ fun EsNavHost(
             )
         }
         composable<SavedDestination> { PlaceholderScreen(R.string.saved_title) }
-        composable<YouDestination> { PlaceholderScreen(R.string.you_title) }
+        composable<YouDestination> {
+            YouRoute(onClose = { navController.navigateToTopLevel(TopLevelDestination.Today) })
+        }
         composable<SearchDestination> {
             SearchRoute(
                 onBack = { navController.popBackStack() },

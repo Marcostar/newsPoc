@@ -5,10 +5,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-
-enum class ThemePref { Light, Dark, System }
 
 // In-app text size, like Kindle. Multiplies on top of the system font scale.
 val TextSizeSteps = listOf(0.85f, 0.92f, 1f, 1.12f, 1.25f, 1.4f, 1.6f)
@@ -19,18 +18,13 @@ private const val MAX_FONT_SCALE = 2f
 
 @Composable
 fun EveryStoryTheme(
-    themePref: ThemePref = ThemePref.System,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     textSizeIndex: Int = DEFAULT_TEXT_SIZE_INDEX,
     highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (themePref) {
-        ThemePref.Light -> false
-        ThemePref.Dark -> true
-        ThemePref.System -> isSystemInDarkTheme()
-    }
-    val esColors = if (dark) NightEsColors else DayEsColors
-    val baseScheme = if (dark) NightColors else DayColors
+    val esColors = if (darkTheme) NightEsColors else DayEsColors
+    val baseScheme = if (darkTheme) NightColors else DayColors
     val colorScheme = if (highContrast) {
         baseScheme.copy(onSurfaceVariant = baseScheme.onSurface, outlineVariant = esColors.muted)
     } else {
@@ -43,6 +37,7 @@ fun EveryStoryTheme(
 
     CompositionLocalProvider(
         LocalEsColors provides esColors,
+        LocalDarkTheme provides darkTheme,
         LocalDensity provides Density(density.density, fontScale),
     ) {
         MaterialTheme(
@@ -54,7 +49,14 @@ fun EveryStoryTheme(
     }
 }
 
+// The reader can pick a theme that differs from the phone's, so anything with a day/night variant
+// (like the logo) asks the app theme, not the -night resource folder.
+private val LocalDarkTheme = staticCompositionLocalOf { false }
+
 object EsTheme {
     val colors: EsColors
         @Composable @ReadOnlyComposable get() = LocalEsColors.current
+
+    val isDark: Boolean
+        @Composable @ReadOnlyComposable get() = LocalDarkTheme.current
 }

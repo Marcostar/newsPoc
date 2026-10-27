@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.Dp
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
+import com.m10.everystory.core.designsystem.theme.EsTheme
 
 @Composable
 fun EsLogoLockup(
@@ -34,7 +35,7 @@ fun EsLogoLockup(
         horizontalArrangement = Arrangement.spacedBy(EsSpace.s8),
     ) {
         Image(
-            painter = painterResource(R.drawable.ic_logo_mark),
+            painter = painterResource(if (EsTheme.isDark) R.drawable.ic_logo_mark_night else R.drawable.ic_logo_mark),
             contentDescription = null,
             modifier = Modifier.size(markSize),
         )

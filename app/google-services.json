@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "205360302664",
+    "project_id": "everystory---news-app",
+    "storage_bucket": "everystory---news-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205360302664:android:22e97fb8d80a278945e67d",
+        "android_client_info": {
+          "package_name": "com.m10.everystory"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3udKEmIyS-KzoVgX-53E_MEgW8QmYzMg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
