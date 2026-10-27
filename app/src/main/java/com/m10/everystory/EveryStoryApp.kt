@@ -28,14 +28,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.m10.everystory.core.ads.AdBanner
 import com.m10.everystory.core.analytics.AnalyticsScreen
+import com.m10.everystory.core.designsystem.component.EsConnectivityBanner
 import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
 import com.m10.everystory.core.designsystem.component.EsNavItem
 import com.m10.everystory.core.designsystem.theme.EsMotion
+import com.m10.everystory.core.ui.ConnectivityStatus
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.TourTargets
+import com.m10.everystory.core.ui.clockTimeText
 import com.m10.everystory.core.ui.rememberSystemReducedMotion
 import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.feature.display.TextAndDisplaySheet
@@ -50,6 +53,8 @@ import com.m10.everystory.navigation.topLevelDestination
 
 @Composable
 fun EveryStoryApp(
+    connectivity: ConnectivityStatus,
+    onBackOnlineHandled: () -> Unit,
     onScreenViewed: (AnalyticsScreen) -> Unit,
     showAds: Boolean,
     onAdImpression: () -> Unit,
@@ -90,6 +95,20 @@ fun EveryStoryApp(
                 containerColor = MaterialTheme.colorScheme.background,
                 // While the tour is up, TalkBack only reads the tour.
                 modifier = if (tourStep != null) Modifier.clearAndSetSemantics {} else Modifier,
+                // On every screen, as in the prototype: reading a story offline is when it matters most.
+                topBar = {
+                    EsConnectivityBanner(
+                        status = connectivity,
+                        updatedAt = todayState.updatedAt?.let { clockTimeText(it) },
+                        showSavedAction = currentTab != TopLevelDestination.Saved,
+                        onSavedClick = { navController.navigateToTopLevel(TopLevelDestination.Saved) },
+                        onRefreshClick = {
+                            onBackOnlineHandled()
+                            navController.navigateToTopLevel(TopLevelDestination.Today)
+                            todayViewModel.onRefresh()
+                        },
+                    )
+                },
                 bottomBar = {
                     if (currentTab != null) {
                         Column {

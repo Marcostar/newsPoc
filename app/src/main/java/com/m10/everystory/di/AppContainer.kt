@@ -21,6 +21,8 @@ import com.m10.everystory.core.analytics.FirebaseAnalyticsTracker
 import com.m10.everystory.core.database.EveryStoryDatabase
 import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
+import com.m10.everystory.core.network.ConnectivityManagerNetworkMonitor
+import com.m10.everystory.core.network.NetworkMonitor
 import com.m10.everystory.data.news.DefaultNewsRepository
 import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.data.preferences.DataStoreUserPreferencesRepository
@@ -65,6 +67,7 @@ interface AppContainer {
     val analyticsTracker: AnalyticsTracker
     val adConsent: AdConsent
     val dataUsageRepository: DataUsageRepository
+    val networkMonitor: NetworkMonitor
 
     // Coil's image downloads go through this client so their bytes are counted too.
     val imageHttpClient: OkHttpClient
@@ -124,10 +127,15 @@ class DefaultAppContainer(
         Room.databaseBuilder(context, EveryStoryDatabase::class.java, DATABASE_FILE).build()
     }
 
+    override val networkMonitor: NetworkMonitor by lazy {
+        ConnectivityManagerNetworkMonitor(connectivityManager)
+    }
+
     override val newsRepository: NewsRepository by lazy {
         DefaultNewsRepository(
             api = retrofit.create<NewsApiService>(),
             articleDao = database.articleDao(),
+            feedDao = database.feedDao(),
             json = json,
         )
     }

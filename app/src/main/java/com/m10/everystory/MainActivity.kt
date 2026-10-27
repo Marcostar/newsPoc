@@ -47,7 +47,10 @@ class MainActivity : ComponentActivity() {
 
             EveryStoryTheme(darkTheme = darkTheme, textScale = appearance.textScale) {
                 val canShowAds by adConsent.canShowAds.collectAsStateWithLifecycle()
+                val connectivity by viewModel.connectivity.collectAsStateWithLifecycle()
                 EveryStoryApp(
+                    connectivity = connectivity,
+                    onBackOnlineHandled = viewModel::onBackOnlineHandled,
                     onScreenViewed = viewModel::onScreenViewed,
                     showAds = canShowAds,
                     onAdImpression = viewModel::onAdImpression,

@@ -3,6 +3,7 @@ package com.m10.everystory.domain.repository
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.ArticlePage
+import com.m10.everystory.domain.model.CachedHeadlines
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.NewsSource
@@ -17,6 +18,12 @@ interface NewsRepository {
         category: NewsCategory? = null,
         language: NewsLanguage = NewsLanguage.Default,
     ): AppResult<ArticlePage>
+
+    // The first page from the last successful load of this feed, or null if it never loaded.
+    suspend fun cachedHeadlines(
+        category: NewsCategory? = null,
+        language: NewsLanguage = NewsLanguage.Default,
+    ): CachedHeadlines?
 
     suspend fun searchArticles(
         query: String,

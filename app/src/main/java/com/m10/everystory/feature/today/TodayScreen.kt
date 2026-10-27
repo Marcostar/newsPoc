@@ -302,8 +302,10 @@ private fun TodayHeading(uiState: TodayUiState, onRefresh: () -> Unit) {
 
 @Composable
 private fun statusLine(uiState: TodayUiState): String? {
+    val updated = uiState.updatedAt?.let(::clockTimeText)
+    if (uiState.isOffline) return updated?.let { stringResource(R.string.status_offline, it) }
     if (uiState.isRefreshing) return stringResource(R.string.status_refreshing)
-    val updated = uiState.updatedAt?.let(::clockTimeText) ?: return null
+    if (updated == null) return null
     return when (val refresh = uiState.lastRefresh) {
         null -> stringResource(R.string.status_updated, updated, stringResource(uiState.newsLanguage.nativeNameRes()))
         is RefreshOutcome.Updated ->

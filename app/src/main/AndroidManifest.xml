@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Online / offline banner. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Only for the "read it later" reminder, asked for the first time a story is saved. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 

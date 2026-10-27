@@ -4,6 +4,7 @@ import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.ArticleSource
+import com.m10.everystory.domain.model.CachedHeadlines
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.NewsSource
@@ -24,6 +25,11 @@ class FakeNewsRepository : NewsRepository {
         headlineLanguages += language
         return headlineResults.removeFirst()
     }
+
+    val cachedFeeds = mutableMapOf<Pair<NewsCategory?, NewsLanguage>, CachedHeadlines>()
+
+    override suspend fun cachedHeadlines(category: NewsCategory?, language: NewsLanguage): CachedHeadlines? =
+        cachedFeeds[category to language]
 
     val searchRequests = mutableListOf<Pair<String, Int>>()
     val searchResults = ArrayDeque<AppResult<ArticlePage>>()

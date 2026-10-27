@@ -3,6 +3,8 @@ package com.m10.everystory.data.news
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.network.toAppError
 import com.m10.everystory.data.news.local.ArticleDao
+import com.m10.everystory.data.news.local.FeedDao
+import com.m10.everystory.data.news.local.FeedEntryEntity
 import com.m10.everystory.data.news.mapper.toArticlePage
 import com.m10.everystory.data.news.mapper.toDomain
 import com.m10.everystory.data.news.mapper.toEntity
@@ -11,6 +13,7 @@ import com.m10.everystory.data.news.remote.dto.ArticlesResponseDto
 import com.m10.everystory.data.news.remote.dto.NewsApiErrorDto
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.model.ArticlePage
+import com.m10.everystory.domain.model.CachedHeadlines
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.NewsSource
@@ -46,6 +49,7 @@ private val CACHE_TTL = Duration.ofDays(7)
 class DefaultNewsRepository(
     private val api: NewsApiService,
     private val articleDao: ArticleDao,
+    private val feedDao: FeedDao,
     private val json: Json,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Instant = Instant::now,
@@ -56,6 +60,33 @@ class DefaultNewsRepository(
     private val sourceIdsMutex = Mutex()
 
     override suspend fun topHeadlines(
+        page: Int,
+        category: NewsCategory?,
+        language: NewsLanguage,
+    ): AppResult<ArticlePage> {
+        val result = fetchHeadlines(page, category, language)
+        // Page one is what Today shows first, so it's kept for opening the app without a connection.
+        if (page == 1 && result is AppResult.Success) {
+            rememberFeed(feedKey(category, language), result.data.articles)
+        }
+        return result
+    }
+
+    override suspend fun cachedHeadlines(
+        category: NewsCategory?,
+        language: NewsLanguage,
+    ): CachedHeadlines? = withContext(ioDispatcher) {
+        val key = feedKey(category, language)
+        val articles = feedDao.articles(key)
+        val fetchedAt = feedDao.fetchedAt(key)
+        if (articles.isEmpty() || fetchedAt == null) {
+            null
+        } else {
+            CachedHeadlines(articles.map { it.toDomain() }, Instant.ofEpochMilli(fetchedAt))
+        }
+    }
+
+    private suspend fun fetchHeadlines(
         page: Int,
         category: NewsCategory?,
         language: NewsLanguage,
@@ -157,6 +188,27 @@ class DefaultNewsRepository(
             Timber.w(e, "Couldn't cache %d articles", articles.size)
         }
     }
+
+    // Like the article cache, a failed write here never costs the reader their stories.
+    private suspend fun rememberFeed(feedKey: String, articles: List<Article>) = withContext(ioDispatcher) {
+        val fetchedAt = now()
+        try {
+            feedDao.replaceFeed(
+                feedKey,
+                articles.mapIndexed { index, article ->
+                    FeedEntryEntity(feedKey, index, article.key, fetchedAt.toEpochMilli())
+                },
+            )
+            feedDao.deleteFetchedBefore(fetchedAt.minus(CACHE_TTL).toEpochMilli())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.w(e, "Couldn't remember feed %s", feedKey)
+        }
+    }
+
+    private fun feedKey(category: NewsCategory?, language: NewsLanguage) =
+        "${language.code}/${category?.apiValue ?: "all"}"
 
     private suspend fun <T> safeApiCall(block: suspend () -> T): AppResult<T> =
         withContext(ioDispatcher) {

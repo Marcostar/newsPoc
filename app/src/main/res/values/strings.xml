@@ -78,6 +78,7 @@
     </plurals>
     <string name="status_no_new_stories">Updated %1$s · No new stories</string>
     <string name="status_refresh_failed">Couldn’t refresh. Still showing %1$s.</string>
+    <string name="status_offline">Offline · last updated %1$s</string>
     <string name="refresh">Refresh</string>
     <string name="refreshing">Refreshing…</string>
 
@@ -104,6 +105,13 @@
     <string name="try_again">Try again</string>
 
     <string name="error_offline_title">You’re offline</string>
+    <string name="banner_offline_lead">You’re offline.</string>
+    <string name="banner_offline_body">Showing stories from %1$s. Saved stories still open.</string>
+    <string name="banner_offline_body_no_time">Saved stories still open.</string>
+    <string name="banner_offline_action">Saved</string>
+    <string name="banner_offline_action_description">Open saved stories</string>
+    <string name="banner_back_online_lead">Back online.</string>
+    <string name="banner_back_online_body">Refresh for the latest stories.</string>
     <string name="error_offline_body">Stories will load when you’re connected again.</string>
     <string name="error_cant_load_title">We can’t load stories right now</string>
     <string name="error_unauthorized_body">The news service didn’t accept this app’s key.</string>
@@ -206,4 +214,5 @@
     <string name="tour_saved_text">Stories you save wait here, and they open without a connection.</string>
     <string name="tour_you_title">Make it yours</string>
     <string name="tour_you_text">Choose light or dark, and replay this tour, under You.</string>
+
 </resources>

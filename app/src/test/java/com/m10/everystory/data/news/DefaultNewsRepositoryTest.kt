@@ -8,6 +8,7 @@ import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.testing.FakeArticleDao
+import com.m10.everystory.testing.FakeFeedDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -38,6 +39,7 @@ class DefaultNewsRepositoryTest {
     private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
     private lateinit var repository: DefaultNewsRepository
     private val dao = FakeArticleDao()
+    private val feedDao = FakeFeedDao(dao)
     private val now = Instant.parse("2026-10-26T09:30:00Z")
 
     @Before
@@ -50,7 +52,7 @@ class DefaultNewsRepositoryTest {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
             .create<NewsApiService>()
-        repository = DefaultNewsRepository(api, dao, json, UnconfinedTestDispatcher(), now = { now })
+        repository = DefaultNewsRepository(api, dao, feedDao, json, UnconfinedTestDispatcher(), now = { now })
     }
 
     @After
@@ -103,6 +105,31 @@ class DefaultNewsRepositoryTest {
         server.enqueue(MockResponse().setBody(HEADLINES_JSON))
 
         assertEquals(1, repository.topHeadlines(page = 1).successValue().articles.size)
+    }
+
+    @Test
+    fun `first page is remembered per feed for opening offline`() = runTest {
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        val article = repository.topHeadlines(page = 1, category = NewsCategory.Health).successValue().articles.single()
+
+        val cached = repository.cachedHeadlines(category = NewsCategory.Health)
+        assertEquals(listOf(article), cached?.articles)
+        assertEquals(now, cached?.updatedAt)
+        assertNull(repository.cachedHeadlines(category = null))
+    }
+
+    @Test
+    fun `later pages and failures leave the remembered feed alone`() = runTest {
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON.replace("espn.com/nfl/story/1", "espn.com/nfl/story/2")))
+        server.enqueue(errorResponse(500, "unexpectedError"))
+        val first = repository.topHeadlines(page = 1).successValue().articles
+
+        repository.topHeadlines(page = 2)
+        repository.topHeadlines(page = 1)
+
+        assertEquals(first, repository.cachedHeadlines()?.articles)
     }
 
     @Test

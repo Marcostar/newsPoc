@@ -7,10 +7,13 @@ import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
+import com.m10.everystory.domain.model.CachedHeadlines
 import com.m10.everystory.testing.FakeAnalyticsTracker
+import com.m10.everystory.testing.FakeNetworkMonitor
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeUserPreferencesRepository
 import com.m10.everystory.testing.MainDispatcherRule
+import com.m10.everystory.testing.testArticle
 import com.m10.everystory.testing.testPage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -31,9 +34,10 @@ class TodayViewModelTest {
     private val repository = FakeNewsRepository()
     private val analytics = FakeAnalyticsTracker()
     private val preferences = FakeUserPreferencesRepository()
+    private val network = FakeNetworkMonitor()
     private val fixedNow = Instant.parse("2026-10-26T09:30:00Z")
 
-    private fun createViewModel() = TodayViewModel(repository, preferences, analytics, now = { fixedNow })
+    private fun createViewModel() = TodayViewModel(repository, preferences, network, analytics, now = { fixedNow })
 
     @Test
     fun `first load shows headlines and ends the launch screen`() = runTest {
@@ -60,6 +64,55 @@ class TodayViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isLaunching)
         assertEquals(FeedStatus.Failed(AppError.Offline), state.feedStatus)
+    }
+
+    @Test
+    fun `cached feed shows at once and is replaced when page one arrives`() = runTest {
+        val cachedAt = Instant.parse("2026-10-26T07:00:00Z")
+        repository.cachedFeeds[null to NewsLanguage.English] = CachedHeadlines(listOf(testArticle("a")), cachedAt)
+        repository.headlineResults += testPage(1, listOf("b", "a"))
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLaunching)
+        assertEquals(listOf("b", "a"), state.articles.map { it.key })
+        assertEquals(RefreshOutcome.Updated(newStories = 1), state.lastRefresh)
+        assertEquals(fixedNow, state.updatedAt)
+    }
+
+    @Test
+    fun `cached feed stays on screen when the network fails`() = runTest {
+        val cachedAt = Instant.parse("2026-10-26T07:00:00Z")
+        repository.cachedFeeds[null to NewsLanguage.English] = CachedHeadlines(listOf(testArticle("a")), cachedAt)
+        repository.headlineResults += AppResult.Failure(AppError.Offline)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(FeedStatus.Loaded, state.feedStatus)
+        assertEquals(listOf("a"), state.articles.map { it.key })
+        assertEquals(cachedAt, state.updatedAt)
+        assertEquals(RefreshOutcome.Failed(AppError.Offline), state.lastRefresh)
+        assertFalse(state.isRefreshing)
+    }
+
+    @Test
+    fun `offline flag follows the network without reloading`() = runTest {
+        repository.headlineResults += testPage(1, listOf("a"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        network.isOnline.value = false
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isOffline)
+
+        network.isOnline.value = true
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isOffline)
+        assertEquals(1, repository.headlineRequests.size)
     }
 
     @Test

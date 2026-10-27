@@ -18,6 +18,7 @@ data class TodayUiState(
     val lastRefresh: RefreshOutcome? = null,
     val updatedAt: Instant? = null,
     val loadMore: LoadMoreState = LoadMoreState.Idle,
+    val isOffline: Boolean = false,
 )
 
 sealed interface FeedStatus {

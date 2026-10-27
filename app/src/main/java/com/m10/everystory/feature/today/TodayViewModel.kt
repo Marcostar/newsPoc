@@ -10,6 +10,7 @@ import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.common.AppResult
+import com.m10.everystory.core.network.NetworkMonitor
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
@@ -28,6 +29,7 @@ import java.time.Instant
 class TodayViewModel(
     private val newsRepository: NewsRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val networkMonitor: NetworkMonitor,
     private val analytics: AnalyticsTracker,
     private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -56,6 +58,10 @@ class TodayViewModel(
                 }
                 loadFirstPage()
             }
+        }
+        // Only changes the status line; coming back online never reloads by itself.
+        viewModelScope.launch {
+            networkMonitor.isOnline.collect { online -> _uiState.update { it.copy(isOffline = !online) } }
         }
     }
 
@@ -97,18 +103,7 @@ class TodayViewModel(
         _uiState.update { it.copy(isRefreshing = true, loadMore = it.loadMore.settled()) }
 
         feedJob = viewModelScope.launch {
-            when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory, language = state.newsLanguage)) {
-                is AppResult.Success -> {
-                    val newStories = result.data.articles.count { it.key !in previousKeys }
-                    showFirstPage(result.data, RefreshOutcome.Updated(newStories))
-                }
-                is AppResult.Failure -> {
-                    analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Today, result.error))
-                    _uiState.update {
-                        it.copy(isRefreshing = false, lastRefresh = RefreshOutcome.Failed(result.error))
-                    }
-                }
-            }
+            refreshFirstPage(state.selectedCategory, state.newsLanguage, previousKeys)
         }
     }
 
@@ -147,6 +142,23 @@ class TodayViewModel(
         cancelLoading()
         val state = _uiState.value
         feedJob = viewModelScope.launch {
+            // Offline-first: show this feed as it was last time straight away, then check for new stories.
+            val cached = newsRepository.cachedHeadlines(category = state.selectedCategory, language = state.newsLanguage)
+            if (cached != null) {
+                currentPage = 1
+                _uiState.update {
+                    it.copy(
+                        isLaunching = false,
+                        articles = cached.articles,
+                        feedStatus = FeedStatus.Loaded,
+                        isRefreshing = true,
+                        updatedAt = cached.updatedAt,
+                        loadMore = LoadMoreState.Idle,
+                    )
+                }
+                refreshFirstPage(state.selectedCategory, state.newsLanguage, cached.articles.mapTo(HashSet()) { it.key })
+                return@launch
+            }
             when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory, language = state.newsLanguage)) {
                 is AppResult.Success -> showFirstPage(result.data, refresh = null)
                 is AppResult.Failure -> {
@@ -154,6 +166,22 @@ class TodayViewModel(
                     _uiState.update {
                         it.copy(isLaunching = false, feedStatus = FeedStatus.Failed(result.error))
                     }
+                }
+            }
+        }
+    }
+
+    // Swaps in page one if it arrives; if not, the stories already on screen stay put.
+    private suspend fun refreshFirstPage(category: NewsCategory?, language: NewsLanguage, previousKeys: Set<String>) {
+        when (val result = newsRepository.topHeadlines(page = 1, category = category, language = language)) {
+            is AppResult.Success -> {
+                val newStories = result.data.articles.count { it.key !in previousKeys }
+                showFirstPage(result.data, RefreshOutcome.Updated(newStories))
+            }
+            is AppResult.Failure -> {
+                analytics.log(AnalyticsEvent.LoadError(AnalyticsScreen.Today, result.error))
+                _uiState.update {
+                    it.copy(isRefreshing = false, lastRefresh = RefreshOutcome.Failed(result.error))
                 }
             }
         }
@@ -192,6 +220,7 @@ class TodayViewModel(
                 TodayViewModel(
                     newsRepository = app.container.newsRepository,
                     userPreferencesRepository = app.container.userPreferencesRepository,
+                    networkMonitor = app.container.networkMonitor,
                     analytics = app.container.analyticsTracker,
                 )
             }
