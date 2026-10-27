@@ -49,15 +49,16 @@ sealed class AnalyticsEvent(
     data class LanguageChange(val language: NewsLanguage) :
         AnalyticsEvent("language_change", mapOf("language" to language.code))
 
-    // Google Analytics' recommended ad events, so they line up with AdMob's own reports.
+    // Google Analytics' recommended ad event, so it lines up with AdMob's own reports.
     data object AdImpression :
         AnalyticsEvent("ad_impression", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
 
+    // "ad_click" and "notification_open" are reserved by Firebase and silently dropped.
     data object AdClick :
-        AnalyticsEvent("ad_click", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
+        AnalyticsEvent("banner_click", mapOf("ad_platform" to "admob", "ad_format" to "banner"))
 
     data object NotificationOpen :
-        AnalyticsEvent("notification_open", mapOf("notification" to "saved_reminder"))
+        AnalyticsEvent("reminder_open", mapOf("notification" to "saved_reminder"))
 
     data object TourComplete : AnalyticsEvent("tour_complete")
 
