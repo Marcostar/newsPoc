@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.m10.everystory.R
+import com.m10.everystory.core.designsystem.component.EsAaButton
 import com.m10.everystory.core.designsystem.component.EsLogoLockup
 import com.m10.everystory.core.designsystem.component.EsMessage
 import com.m10.everystory.core.designsystem.component.EsSearchBarButton
@@ -76,6 +77,7 @@ fun TodayRoute(
     viewModel: TodayViewModel,
     isTourRunning: Boolean,
     onSearchClick: () -> Unit,
+    onAaClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +89,7 @@ fun TodayRoute(
     TodayScreen(
         uiState = uiState,
         onSearchClick = onSearchClick,
+        onAaClick = onAaClick,
         onArticleClick = onArticleClick,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
@@ -102,6 +105,7 @@ fun TodayRoute(
 fun TodayScreen(
     uiState: TodayUiState,
     onSearchClick: () -> Unit,
+    onAaClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
@@ -113,11 +117,16 @@ fun TodayScreen(
 ) {
     val tourTargets = LocalTourTargets.current
     Column(modifier = modifier.fillMaxSize()) {
-        EsLogoLockup(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
+                .fillMaxWidth()
                 .heightIn(min = EsSize.minTarget)
                 .padding(start = EsSpace.screen, end = EsSpace.s8, top = EsSpace.s4),
-        )
+        ) {
+            EsLogoLockup(modifier = Modifier.weight(1f))
+            EsAaButton(onClick = onAaClick, modifier = Modifier.tourTarget(tourTargets, TourStep.TextSize))
+        }
         EsSearchBarButton(
             onClick = onSearchClick,
             modifier = Modifier
@@ -330,6 +339,7 @@ private fun TodayScreenPreview() {
                 updatedAt = now,
             ),
             onSearchClick = {},
+            onAaClick = {},
             onArticleClick = {},
             onRefresh = {},
             onRetry = {},

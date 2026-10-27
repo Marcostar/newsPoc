@@ -3,7 +3,9 @@ package com.m10.everystory.core.analytics
 import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.domain.model.NewsCategory
+import com.m10.everystory.domain.model.TextSize
 import com.m10.everystory.domain.model.ThemeSetting
+import kotlin.math.roundToInt
 
 /**
  * Every event the app sends, in one place. `screen_view` and `search` use Firebase's standard
@@ -38,6 +40,10 @@ sealed class AnalyticsEvent(
 
     data class StoryUnsave(val source: String) :
         AnalyticsEvent("story_unsave", mapOf("source" to source))
+
+    // Sent as a percentage (85–160) so reports read naturally.
+    data class TextSizeChange(val step: Int) :
+        AnalyticsEvent("text_size_change", mapOf("text_size" to (TextSize.scaleOf(step) * 100).roundToInt().toString()))
 
     data object TourComplete : AnalyticsEvent("tour_complete")
 

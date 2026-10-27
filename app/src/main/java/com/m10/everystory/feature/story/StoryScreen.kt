@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.component.ArticleImage
+import com.m10.everystory.core.designsystem.component.EsAaButton
 import com.m10.everystory.core.designsystem.component.EsMessage
 import com.m10.everystory.core.designsystem.component.EsSnackbarHost
 import com.m10.everystory.core.designsystem.icon.EsIcons
@@ -72,6 +73,7 @@ fun StoryRoute(
     articleKey: String,
     backLabel: String,
     onBack: () -> Unit,
+    onAaClick: () -> Unit,
     viewModel: StoryViewModel = viewModel(factory = StoryViewModel.factory(articleKey)),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +84,7 @@ fun StoryRoute(
         backLabel = backLabel,
         onBack = onBack,
         onToggleSave = viewModel::onToggleSave,
+        onAaClick = onAaClick,
         onUndo = viewModel::onUndo,
         onMessageShown = viewModel::onMessageShown,
         onReadFullStory = { url ->
@@ -97,6 +100,7 @@ fun StoryScreen(
     backLabel: String,
     onBack: () -> Unit,
     onToggleSave: () -> Unit,
+    onAaClick: () -> Unit,
     onUndo: (StoryMessage) -> Unit,
     onMessageShown: () -> Unit,
     onReadFullStory: (String) -> Unit,
@@ -126,6 +130,7 @@ fun StoryScreen(
                 onBack = onBack,
                 isSaved = uiState.isSaved.takeIf { uiState.content is StoryContent.Ready },
                 onToggleSave = onToggleSave,
+                onAaClick = onAaClick,
             )
             StoryBody(content = uiState.content, backLabel = backLabel, onBack = onBack, onReadFullStory = onReadFullStory)
         }
@@ -166,6 +171,7 @@ private fun StoryTopBar(
     onBack: () -> Unit,
     isSaved: Boolean?,
     onToggleSave: () -> Unit,
+    onAaClick: () -> Unit,
 ) {
     val backDescription = stringResource(R.string.back_to, backLabel)
     Row(
@@ -189,6 +195,7 @@ private fun StoryTopBar(
         }
         Spacer(modifier = Modifier.weight(1f))
         if (isSaved != null) SaveButton(isSaved = isSaved, onClick = onToggleSave)
+        EsAaButton(onClick = onAaClick)
     }
 }
 
@@ -361,6 +368,7 @@ private fun StoryScreenPreview() {
             backLabel = "Today",
             onBack = {},
             onToggleSave = {},
+            onAaClick = {},
             onUndo = {},
             onMessageShown = {},
             onReadFullStory = {},

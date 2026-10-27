@@ -248,6 +248,7 @@ private class TourTip(@param:StringRes val title: Int, @param:StringRes val text
 
 private fun TourStep.tip(): TourTip = when (this) {
     TourStep.Search -> TourTip(R.string.tour_search_title, R.string.tour_search_text)
+    TourStep.TextSize -> TourTip(R.string.tour_text_size_title, R.string.tour_text_size_text)
     TourStep.Topics -> TourTip(R.string.tour_topics_title, R.string.tour_topics_text)
     TourStep.LeadStory -> TourTip(R.string.tour_story_title, R.string.tour_story_text)
     TourStep.Saved -> TourTip(R.string.tour_saved_title, R.string.tour_saved_text)

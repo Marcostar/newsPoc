@@ -8,6 +8,11 @@ interface UserPreferencesRepository {
 
     suspend fun setThemeSetting(setting: ThemeSetting)
 
+    // An index into TextSize.scales.
+    val textSizeStep: Flow<Int>
+
+    suspend fun setTextSizeStep(step: Int)
+
     val tourSeen: Flow<Boolean>
 
     suspend fun setTourSeen()

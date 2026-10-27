@@ -9,11 +9,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
-import com.m10.everystory.domain.model.ThemeSetting
 
 class MainActivity : ComponentActivity() {
 
@@ -23,11 +21,11 @@ class MainActivity : ComponentActivity() {
         // The system splash shows the mark, then hands straight over to EsLaunchScreen.
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        splashScreen.setKeepOnScreenCondition { viewModel.themeSetting.value == null }
+        splashScreen.setKeepOnScreenCondition { viewModel.appearance.value == null }
 
         setContent {
-            val themeSetting by viewModel.themeSetting.collectAsStateWithLifecycle()
-            val darkTheme = (themeSetting ?: ThemeSetting.System).isDark(isSystemInDarkTheme())
+            val appearance = viewModel.appearance.collectAsStateWithLifecycle().value ?: Appearance()
+            val darkTheme = appearance.themeSetting.isDark(isSystemInDarkTheme())
 
             // Status bar icons follow the app's theme, which may differ from the phone's.
             DisposableEffect(darkTheme) {
@@ -36,7 +34,7 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
 
-            EveryStoryTheme(darkTheme = darkTheme) {
+            EveryStoryTheme(darkTheme = darkTheme, textScale = appearance.textScale) {
                 EveryStoryApp(onScreenViewed = viewModel::onScreenViewed)
             }
         }

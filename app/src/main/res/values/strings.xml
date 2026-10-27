@@ -30,8 +30,8 @@
     <string name="you_news_source_description">News from NewsAPI.org, opens in browser</string>
     <string name="you_help">Help</string>
     <string name="you_tour">App tour</string>
-    <string name="you_tour_detail">5 quick tips on Today · about 30 seconds</string>
-    <string name="you_tour_description">App tour, 5 quick tips on Today</string>
+    <string name="you_display">Text and display</string>
+    <string name="you_display_detail">Text size and theme</string>
     <string name="clear">Clear</string>
 
     <string name="recent_searches">Recent searches</string>
@@ -113,7 +113,32 @@
     <string name="error_rate_limited_body">Try again in a minute.</string>
     <string name="error_unknown_body">Something went wrong on our side. Try again.</string>
 
+    <!-- Text and display (Aa) -->
+    <string name="aa_label">Aa</string>
+    <string name="aa_letter">A</string>
+    <string name="aa_description">Text and display settings</string>
+    <string name="display_title">Text and display</string>
+    <string name="display_reset">Reset</string>
+    <string name="display_close_description">Close text and display</string>
+    <string name="display_preview">Raising the levee in 2019 didn\'t stop the 2024 flood. Now the council will pay homeowners on the four lowest streets to move.</string>
+    <string name="display_text_size">Text size</string>
+    <string name="display_size_value">Size %1$d of %2$d · %3$d%%</string>
+    <string name="display_smaller">Smaller text</string>
+    <string name="display_larger">Larger text</string>
+    <string name="display_smallest_reached">Smaller text, already at the smallest size</string>
+    <string name="display_largest_reached">Larger text, already at the largest size</string>
+    <string name="display_theme">Theme</string>
+    <string name="display_done">Done</string>
+
     <!-- App tour -->
+    <plurals name="you_tour_detail">
+        <item quantity="one">%1$d quick tip on Today · about 30 seconds</item>
+        <item quantity="other">%1$d quick tips on Today · about 30 seconds</item>
+    </plurals>
+    <plurals name="you_tour_description">
+        <item quantity="one">App tour, %1$d quick tip on Today</item>
+        <item quantity="other">App tour, %1$d quick tips on Today</item>
+    </plurals>
     <string name="tour_pane_title">App tour</string>
     <string name="tour_count">App tour · %1$d of %2$d</string>
     <string name="tour_skip">Skip</string>
@@ -122,6 +147,8 @@
     <string name="tour_finish">Start reading</string>
     <string name="tour_search_title">Search sits at the top</string>
     <string name="tour_search_text">Find any story by keyword, place or person. Results start as you type.</string>
+    <string name="tour_text_size_title">Make the text comfortable</string>
+    <string name="tour_text_size_text">Aa changes the text size and theme, like a reading app. It works on every screen.</string>
     <string name="tour_topics_title">Pick a topic</string>
     <string name="tour_topics_text">Narrow Today to business, health, science, sports, tech or entertainment.</string>
     <string name="tour_story_title">Open a story</string>

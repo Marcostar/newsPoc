@@ -14,7 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -31,6 +34,7 @@ import com.m10.everystory.core.ui.LocalTourTargets
 import com.m10.everystory.core.ui.TourStep
 import com.m10.everystory.core.ui.TourTargets
 import com.m10.everystory.core.ui.tourTarget
+import com.m10.everystory.feature.display.TextAndDisplaySheet
 import com.m10.everystory.feature.today.TodayViewModel
 import com.m10.everystory.feature.tour.TourOverlay
 import com.m10.everystory.feature.tour.TourViewModel
@@ -65,6 +69,9 @@ fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
     // Waits for the launch screen, so the first tip lands on a real feed.
     val tourStep = tourState.step.takeUnless { todayState.isLaunching }
 
+    // Opened from Today, Story and You, so it lives here rather than on any one screen.
+    var showDisplaySettings by rememberSaveable { mutableStateOf(false) }
+
     CompositionLocalProvider(LocalTourTargets provides tourTargets) {
         Box {
             Scaffold(
@@ -96,11 +103,16 @@ fun EveryStoryApp(onScreenViewed: (AnalyticsScreen) -> Unit) {
                     todayViewModel = todayViewModel,
                     isTourRunning = tourStep != null,
                     onStartTour = tourViewModel::onStart,
+                    onOpenDisplaySettings = { showDisplaySettings = true },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                         .consumeWindowInsets(innerPadding),
                 )
+            }
+
+            if (showDisplaySettings) {
+                TextAndDisplaySheet(onDismiss = { showDisplaySettings = false })
             }
 
             if (tourStep != null) {

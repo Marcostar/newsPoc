@@ -48,9 +48,9 @@ class TourViewModelTest {
         assertEquals(TourStep.Search, viewModel.uiState.value.step)
         viewModel.onNext()
         viewModel.onNext()
-        assertEquals(TourStep.LeadStory, viewModel.uiState.value.step)
-        viewModel.onBack()
         assertEquals(TourStep.Topics, viewModel.uiState.value.step)
+        viewModel.onBack()
+        assertEquals(TourStep.TextSize, viewModel.uiState.value.step)
     }
 
     @Test
@@ -79,7 +79,7 @@ class TourViewModelTest {
 
         assertNull(viewModel.uiState.value.step)
         assertTrue(preferences.tourSeen.first())
-        assertEquals(listOf(AnalyticsEvent.TourSkip(TourStep.Topics)), analytics.events)
+        assertEquals(listOf(AnalyticsEvent.TourSkip(TourStep.TextSize)), analytics.events)
     }
 
     @Test

@@ -22,6 +22,7 @@ fun EsNavHost(
     todayViewModel: TodayViewModel,
     isTourRunning: Boolean,
     onStartTour: () -> Unit,
+    onOpenDisplaySettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -34,6 +35,7 @@ fun EsNavHost(
                 viewModel = todayViewModel,
                 isTourRunning = isTourRunning,
                 onSearchClick = { navController.navigate(SearchDestination) },
+                onAaClick = onOpenDisplaySettings,
                 onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
             )
         }
@@ -51,6 +53,7 @@ fun EsNavHost(
                     onStartTour()
                     navController.navigateToTopLevel(TopLevelDestination.Today)
                 },
+                onOpenDisplaySettings = onOpenDisplaySettings,
             )
         }
         composable<SearchDestination> {
@@ -70,6 +73,7 @@ fun EsNavHost(
                 articleKey = entry.toRoute<StoryDestination>().articleKey,
                 backLabel = stringResource(backLabel),
                 onBack = { navController.popBackStack() },
+                onAaClick = onOpenDisplaySettings,
             )
         }
     }

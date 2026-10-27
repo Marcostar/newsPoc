@@ -9,17 +9,14 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 
-// In-app text size, like Kindle. Multiplies on top of the system font scale.
-val TextSizeSteps = listOf(0.85f, 0.92f, 1f, 1.12f, 1.25f, 1.4f, 1.6f)
-const val DEFAULT_TEXT_SIZE_INDEX = 2
-
 // Android's own font size setting stops at 200%; past that our layouts aren't designed to hold.
 private const val MAX_FONT_SCALE = 2f
 
 @Composable
 fun EveryStoryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    textSizeIndex: Int = DEFAULT_TEXT_SIZE_INDEX,
+    // The reader's in-app text size, multiplied on top of the phone's font scale.
+    textScale: Float = 1f,
     highContrast: Boolean = false,
     content: @Composable () -> Unit,
 ) {
@@ -32,8 +29,7 @@ fun EveryStoryTheme(
     }
 
     val density = LocalDensity.current
-    val step = TextSizeSteps[textSizeIndex.coerceIn(TextSizeSteps.indices)]
-    val fontScale = (density.fontScale * step).coerceAtMost(MAX_FONT_SCALE)
+    val fontScale = (density.fontScale * textScale).coerceAtMost(MAX_FONT_SCALE)
 
     CompositionLocalProvider(
         LocalEsColors provides esColors,

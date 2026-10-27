@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -38,18 +39,19 @@ import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.core.designsystem.theme.EsTheme
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
+import com.m10.everystory.core.ui.labelRes
 import com.m10.everystory.core.ui.openInCustomTab
+import com.m10.everystory.core.ui.TourStep
+import com.m10.everystory.core.ui.themeOptions
 import com.m10.everystory.domain.model.ThemeSetting
 
 private const val NEWS_API_URL = "https://newsapi.org"
-
-// Light, Dark, then System, in the prototype's order.
-private val themeOptions = listOf(ThemeSetting.Light, ThemeSetting.Dark, ThemeSetting.System)
 
 @Composable
 fun YouRoute(
     onClose: () -> Unit,
     onStartTour: () -> Unit,
+    onOpenDisplaySettings: () -> Unit,
     viewModel: YouViewModel = viewModel(factory = YouViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,6 +64,7 @@ fun YouRoute(
         onClose = onClose,
         onThemeSelected = viewModel::onThemeSelected,
         onStartTour = onStartTour,
+        onOpenDisplaySettings = onOpenDisplaySettings,
         onNewsApiClick = { context.openInCustomTab(NEWS_API_URL, toolbarColor) },
     )
 }
@@ -74,6 +77,7 @@ fun YouScreen(
     onClose: () -> Unit,
     onThemeSelected: (ThemeSetting) -> Unit,
     onStartTour: () -> Unit,
+    onOpenDisplaySettings: () -> Unit,
     onNewsApiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -93,14 +97,21 @@ fun YouScreen(
                 label = { setting -> stringResource(setting.labelRes()) },
                 onSelect = onThemeSelected,
             )
+            AboutRow(
+                icon = EsIcons.TextSize,
+                title = stringResource(R.string.you_display),
+                subtitle = stringResource(R.string.you_display_detail),
+                onClick = onOpenDisplaySettings,
+            )
 
             SectionLabel(stringResource(R.string.you_help))
+            val tipCount = TourStep.entries.size
             AboutRow(
                 icon = EsIcons.Tour,
                 title = stringResource(R.string.you_tour),
-                subtitle = stringResource(R.string.you_tour_detail),
+                subtitle = pluralStringResource(R.plurals.you_tour_detail, tipCount, tipCount),
                 onClick = onStartTour,
-                clickDescription = stringResource(R.string.you_tour_description),
+                clickDescription = pluralStringResource(R.plurals.you_tour_description, tipCount, tipCount),
             )
 
             SectionLabel(stringResource(R.string.you_about))
@@ -203,12 +214,6 @@ private fun AboutRow(
     }
 }
 
-private fun ThemeSetting.labelRes(): Int = when (this) {
-    ThemeSetting.Light -> R.string.theme_light
-    ThemeSetting.Dark -> R.string.theme_dark
-    ThemeSetting.System -> R.string.theme_system
-}
-
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
 @Composable
 private fun YouScreenPreview() {
@@ -220,6 +225,7 @@ private fun YouScreenPreview() {
             onClose = {},
             onThemeSelected = {},
             onStartTour = {},
+            onOpenDisplaySettings = {},
             onNewsApiClick = {},
         )
     }
