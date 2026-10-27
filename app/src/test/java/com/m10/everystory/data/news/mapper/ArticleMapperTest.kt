@@ -23,6 +23,15 @@ class ArticleMapperTest {
     }
 
     @Test
+    fun `title loses a trailing domain-style source`() {
+        assertEquals(
+            "Musk Claims SpaceX Closed Debt Deal",
+            "Musk Claims SpaceX Closed Debt Deal - Bloomberg.com".withoutSourceSuffix("Bloomberg"),
+        )
+        assertEquals("Lula is re-elected", "Lula is re-elected - The Wall Street Journal".withoutSourceSuffix("The Wall Street Journal"))
+    }
+
+    @Test
     fun `title without the suffix is left alone`() {
         assertEquals("Levee repairs - phase two", "Levee repairs - phase two".withoutSourceSuffix("Metro Herald"))
     }

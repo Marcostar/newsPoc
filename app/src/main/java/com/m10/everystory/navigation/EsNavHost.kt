@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -19,10 +18,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsSpace
+import com.m10.everystory.feature.today.TodayRoute
+import com.m10.everystory.feature.today.TodayViewModel
 
 @Composable
 fun EsNavHost(
     navController: NavHostController,
+    todayViewModel: TodayViewModel,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -31,11 +33,11 @@ fun EsNavHost(
         modifier = modifier,
     ) {
         composable<TodayRoute> {
-            PlaceholderScreen(R.string.today_title) {
-                TextButton(onClick = { navController.navigate(SearchRoute) }) {
-                    Text(stringResource(R.string.search_hint))
-                }
-            }
+            TodayRoute(
+                viewModel = todayViewModel,
+                onSearchClick = { navController.navigate(SearchRoute) },
+                onArticleClick = { article -> navController.navigate(StoryRoute(article.key)) },
+            )
         }
         composable<SavedRoute> { PlaceholderScreen(R.string.saved_title) }
         composable<YouRoute> { PlaceholderScreen(R.string.you_title) }

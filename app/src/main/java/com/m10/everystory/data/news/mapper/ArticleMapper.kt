@@ -65,9 +65,16 @@ fun articleKey(url: String): String =
         .take(KEY_BYTES)
         .joinToString("") { "%02x".format(it) }
 
-// Titles arrive as "Headline - Source"; the source is shown on its own line, so drop the suffix.
-internal fun String.withoutSourceSuffix(sourceName: String): String =
-    removeSuffix(" - $sourceName").trim()
+// Titles arrive as "Headline - Source" (sometimes "- Source.com"); the source has its own line, so
+// drop that tail. A tail that isn't the source, like "Levee repairs - phase two", is kept.
+internal fun String.withoutSourceSuffix(sourceName: String): String {
+    val separator = lastIndexOf(" - ")
+    if (separator <= 0) return trim()
+    val tail = substring(separator + 3).trim()
+    val isSource = tail.startsWith(sourceName, ignoreCase = true) ||
+        sourceName.startsWith(tail.substringBefore('.'), ignoreCase = true)
+    return if (isSource) substring(0, separator).trim() else trim()
+}
 
 internal fun String.withoutTruncationMarker(): String =
     replace(TRUNCATION_MARKER, "").trim()

@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">EveryStory</string>
     <string name="tagline">The news, and the people in it.</string>
+    <string name="wordmark_every" translatable="false">Every</string>
+    <string name="wordmark_story" translatable="false">Story</string>
+    <string name="wordmark_quote" translatable="false">”</string>
+    <string name="launch_slow">Still loading. Your connection may be slow.</string>
 
     <string name="nav_today">Today</string>
     <string name="nav_saved">Saved</string>
@@ -12,4 +16,47 @@
     <string name="you_title">You</string>
     <string name="search_title">Search</string>
     <string name="story_title">Story</string>
+
+    <string name="status_updated">Updated %1$s</string>
+    <string name="status_refreshing">Checking for new stories…</string>
+    <plurals name="status_new_stories">
+        <item quantity="one">Updated %1$s · %2$d new</item>
+        <item quantity="other">Updated %1$s · %2$d new</item>
+    </plurals>
+    <string name="status_no_new_stories">Updated %1$s · No new stories</string>
+    <string name="status_refresh_failed">Couldn’t refresh. Still showing %1$s.</string>
+    <string name="refresh">Refresh</string>
+    <string name="refreshing">Refreshing…</string>
+
+    <string name="topic_all">All</string>
+    <string name="topic_business">Business</string>
+    <string name="topic_entertainment">Entertainment</string>
+    <string name="topic_health">Health</string>
+    <string name="topic_science">Science</string>
+    <string name="topic_sports">Sports</string>
+    <string name="topic_technology">Tech</string>
+
+    <string name="time_just_now">Just now</string>
+    <string name="time_minutes_ago">%1$d min ago</string>
+    <string name="time_hours_ago">%1$d h ago</string>
+    <string name="time_yesterday">Yesterday</string>
+    <string name="meta_source_time">%1$s · %2$s</string>
+    <string name="story_card_description">%1$s. %2$s, %3$s</string>
+
+    <string name="feed_loading_more">Loading more stories…</string>
+    <string name="feed_load_more_failed">More stories didn’t load.</string>
+    <string name="feed_end">You’re up to date</string>
+    <string name="feed_empty_title">No stories here right now</string>
+    <string name="feed_empty_body">Try All for the latest headlines.</string>
+    <string name="try_again">Try again</string>
+
+    <string name="error_offline_title">You’re offline</string>
+    <string name="error_offline_body">Stories will load when you’re connected again.</string>
+    <string name="error_cant_load_title">We can’t load stories right now</string>
+    <string name="error_unauthorized_body">The news service didn’t accept this app’s key.</string>
+    <string name="error_server_body">The news service isn’t responding. This isn’t a problem with your phone.</string>
+    <string name="error_timeout_body">The news service is taking too long. Try again in a moment.</string>
+    <string name="error_rate_limited_title">Too many requests</string>
+    <string name="error_rate_limited_body">Try again in a minute.</string>
+    <string name="error_unknown_body">Something went wrong on our side. Try again.</string>
 </resources>

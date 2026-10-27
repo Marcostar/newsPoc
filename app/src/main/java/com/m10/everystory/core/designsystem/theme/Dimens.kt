@@ -29,6 +29,15 @@ object EsSize {
     val focusRing = 2.dp
     val beyondBand = 4.dp
     val logoMark = 34.dp
+    val logoMarkInline = 22.dp
+    val launchMark = 64.dp
+    val searchField = 52.dp
+    val messageIcon = 40.dp
+    val inlineIcon = 20.dp
+    val chipIcon = 18.dp
+    val progressSmall = 20.dp
+    val skeletonLine = 16.dp
+    val hairline = 1.dp
 }
 
 object EsRadius {
