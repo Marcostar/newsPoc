@@ -1,24 +1,15 @@
 package com.m10.everystory.navigation
 
-import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.m10.everystory.R
-import com.m10.everystory.core.designsystem.theme.EsSpace
+import com.m10.everystory.feature.saved.SavedRoute
 import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.story.StoryRoute
 import com.m10.everystory.feature.today.TodayRoute
@@ -43,7 +34,12 @@ fun EsNavHost(
                 onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
             )
         }
-        composable<SavedDestination> { PlaceholderScreen(R.string.saved_title) }
+        composable<SavedDestination> {
+            SavedRoute(
+                onSearchClick = { navController.navigate(SearchDestination) },
+                onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
+            )
+        }
         composable<YouDestination> {
             YouRoute(onClose = { navController.navigateToTopLevel(TopLevelDestination.Today) })
         }
@@ -54,34 +50,18 @@ fun EsNavHost(
             )
         }
         composable<StoryDestination> { entry ->
-            val cameFromSearch = navController.previousBackStackEntry?.destination?.hasRoute<SearchDestination>() == true
+            val previous = navController.previousBackStackEntry?.destination
+            val backLabel = when {
+                previous?.hasRoute<SearchDestination>() == true -> R.string.nav_search
+                previous?.hasRoute<SavedDestination>() == true -> R.string.nav_saved
+                else -> R.string.nav_today
+            }
             StoryRoute(
                 articleKey = entry.toRoute<StoryDestination>().articleKey,
-                backLabel = stringResource(if (cameFromSearch) R.string.nav_search else R.string.nav_today),
+                backLabel = stringResource(backLabel),
                 onBack = { navController.popBackStack() },
             )
         }
     }
 }
 
-// Stand-in until each feature screen lands.
-@Composable
-private fun PlaceholderScreen(
-    @StringRes titleRes: Int,
-    content: @Composable () -> Unit = {},
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = EsSpace.screen, vertical = EsSpace.s24),
-        verticalArrangement = Arrangement.spacedBy(EsSpace.s16),
-    ) {
-        Text(
-            text = stringResource(titleRes),
-            style = MaterialTheme.typography.displaySmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.semantics { heading() },
-        )
-        content()
-    }
-}

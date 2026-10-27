@@ -13,9 +13,11 @@ import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.data.news.DefaultNewsRepository
 import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.data.preferences.DataStoreUserPreferencesRepository
+import com.m10.everystory.data.saved.RoomSavedArticlesRepository
 import com.m10.everystory.data.search.DataStoreRecentSearchesRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
+import com.m10.everystory.domain.repository.SavedArticlesRepository
 import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -38,6 +40,7 @@ interface AppContainer {
     val newsRepository: NewsRepository
     val recentSearchesRepository: RecentSearchesRepository
     val userPreferencesRepository: UserPreferencesRepository
+    val savedArticlesRepository: SavedArticlesRepository
 }
 
 class DefaultAppContainer(
@@ -76,6 +79,10 @@ class DefaultAppContainer(
             articleDao = database.articleDao(),
             json = json,
         )
+    }
+
+    override val savedArticlesRepository: SavedArticlesRepository by lazy {
+        RoomSavedArticlesRepository(database.savedArticleDao())
     }
 
     private val preferences: DataStore<Preferences> by lazy {

@@ -1,12 +1,20 @@
 package com.m10.everystory.feature.story
 
 import com.m10.everystory.testing.FakeNewsRepository
+import com.m10.everystory.testing.FakeSavedArticlesRepository
 import com.m10.everystory.testing.MainDispatcherRule
 import com.m10.everystory.testing.testArticle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -16,24 +24,89 @@ class StoryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = FakeNewsRepository()
+    private val news = FakeNewsRepository()
+    private val saved = FakeSavedArticlesRepository()
+    private val article = testArticle("a")
 
-    @Test
-    fun `a cached article is shown`() = runTest {
-        val article = testArticle("a")
-        repository.cachedArticles["a"] = article
-
-        val viewModel = StoryViewModel("a", repository)
-        advanceUntilIdle()
-
-        assertEquals(StoryUiState.Ready(article), viewModel.uiState.value)
+    // uiState is WhileSubscribed, so collect it the way the screen does.
+    private fun TestScope.createViewModel(key: String = "a") = StoryViewModel(key, news, saved).also { viewModel ->
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }
     }
 
     @Test
-    fun `an article that is no longer cached shows the not found state`() = runTest {
-        val viewModel = StoryViewModel("gone", repository)
+    fun `a cached article is shown`() = runTest {
+        news.cachedArticles["a"] = article
+
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
-        assertEquals(StoryUiState.NotFound, viewModel.uiState.value)
+        assertEquals(StoryContent.Ready(article), viewModel.uiState.value.content)
+        assertFalse(viewModel.uiState.value.isSaved)
+    }
+
+    @Test
+    fun `a saved copy is used once the cache has dropped the article`() = runTest {
+        saved.save(article)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(StoryContent.Ready(article), viewModel.uiState.value.content)
+        assertTrue(viewModel.uiState.value.isSaved)
+    }
+
+    @Test
+    fun `an article nowhere on the phone shows the not found state`() = runTest {
+        val viewModel = createViewModel(key = "gone")
+        advanceUntilIdle()
+
+        assertEquals(StoryContent.NotFound, viewModel.uiState.value.content)
+    }
+
+    @Test
+    fun `save stores the article and confirms it`() = runTest {
+        news.cachedArticles["a"] = article
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.isSaved)
+        assertEquals(StoryMessage.Saved, viewModel.uiState.value.message)
+        assertEquals(listOf(article), saved.savedArticles.first())
+    }
+
+    @Test
+    fun `undo after saving removes it again`() = runTest {
+        news.cachedArticles["a"] = article
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+
+        viewModel.onMessageShown()
+        viewModel.onUndo(StoryMessage.Saved)
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.isSaved)
+        assertNull(viewModel.uiState.value.message)
+    }
+
+    @Test
+    fun `unsaving can be undone`() = runTest {
+        news.cachedArticles["a"] = article
+        saved.save(article)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onToggleSave()
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isSaved)
+        assertEquals(StoryMessage.Removed, viewModel.uiState.value.message)
+
+        viewModel.onUndo(StoryMessage.Removed)
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.isSaved)
     }
 }

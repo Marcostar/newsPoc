@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -18,10 +19,15 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +39,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.component.ArticleImage
 import com.m10.everystory.core.designsystem.component.EsMessage
+import com.m10.everystory.core.designsystem.component.EsSnackbarHost
 import com.m10.everystory.core.designsystem.icon.EsIcons
 import com.m10.everystory.core.designsystem.theme.EsRadius
 import com.m10.everystory.core.designsystem.theme.EsSize
@@ -73,6 +81,9 @@ fun StoryRoute(
         uiState = uiState,
         backLabel = backLabel,
         onBack = onBack,
+        onToggleSave = viewModel::onToggleSave,
+        onUndo = viewModel::onUndo,
+        onMessageShown = viewModel::onMessageShown,
         onReadFullStory = { url -> context.openInCustomTab(url, toolbarColor) },
     )
 }
@@ -82,42 +93,117 @@ fun StoryScreen(
     uiState: StoryUiState,
     backLabel: String,
     onBack: () -> Unit,
+    onToggleSave: () -> Unit,
+    onUndo: (StoryMessage) -> Unit,
+    onMessageShown: () -> Unit,
     onReadFullStory: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        StoryTopBar(backLabel = backLabel, onBack = onBack)
-        when (uiState) {
-            StoryUiState.Loading -> Unit
-            is StoryUiState.Ready -> StoryContent(uiState.article, onReadFullStory)
-            StoryUiState.NotFound -> EsMessage(
-                icon = EsIcons.Info,
-                title = stringResource(R.string.story_missing_title),
-                body = stringResource(R.string.story_missing_body),
-                actionLabel = stringResource(R.string.back_to, backLabel),
-                onAction = onBack,
-                modifier = Modifier.padding(horizontal = EsSpace.screen),
+    val snackbarHostState = remember { SnackbarHostState() }
+    val savedText = stringResource(R.string.snackbar_saved)
+    val removedText = stringResource(R.string.snackbar_removed)
+    val undoLabel = stringResource(R.string.undo)
+
+    // Long is 10 seconds, the design's minimum so nobody has to race the Undo button.
+    LaunchedEffect(uiState.message) {
+        val message = uiState.message ?: return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = if (message == StoryMessage.Saved) savedText else removedText,
+            actionLabel = undoLabel,
+            duration = SnackbarDuration.Long,
+        )
+        onMessageShown()
+        if (result == SnackbarResult.ActionPerformed) onUndo(message)
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            StoryTopBar(
+                backLabel = backLabel,
+                onBack = onBack,
+                isSaved = uiState.isSaved.takeIf { uiState.content is StoryContent.Ready },
+                onToggleSave = onToggleSave,
             )
+            StoryBody(content = uiState.content, backLabel = backLabel, onBack = onBack, onReadFullStory = onReadFullStory)
         }
+        EsSnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(EsSpace.s12),
+        )
     }
 }
 
-// A labelled Back that names where it goes, never a bare arrow.
 @Composable
-private fun StoryTopBar(backLabel: String, onBack: () -> Unit) {
-    val description = stringResource(R.string.back_to, backLabel)
-    TextButton(
-        onClick = onBack,
+private fun StoryBody(
+    content: StoryContent,
+    backLabel: String,
+    onBack: () -> Unit,
+    onReadFullStory: (String) -> Unit,
+) {
+    when (content) {
+        StoryContent.Loading -> Unit
+        is StoryContent.Ready -> StoryContent(content.article, onReadFullStory)
+        StoryContent.NotFound -> EsMessage(
+            icon = EsIcons.Info,
+            title = stringResource(R.string.story_missing_title),
+            body = stringResource(R.string.story_missing_body),
+            actionLabel = stringResource(R.string.back_to, backLabel),
+            onAction = onBack,
+            modifier = Modifier.padding(horizontal = EsSpace.screen),
+        )
+    }
+}
+
+// A labelled Back that names where it goes, never a bare arrow. Save shows once the story is loaded.
+@Composable
+private fun StoryTopBar(
+    backLabel: String,
+    onBack: () -> Unit,
+    isSaved: Boolean?,
+    onToggleSave: () -> Unit,
+) {
+    val backDescription = stringResource(R.string.back_to, backLabel)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .padding(start = EsSpace.s8, top = EsSpace.s4)
-            .heightIn(min = EsSize.minTarget)
-            .semantics { contentDescription = description },
+            .fillMaxWidth()
+            .padding(start = EsSpace.s8, end = EsSpace.s8, top = EsSpace.s4),
     ) {
-        Icon(EsIcons.Back, contentDescription = null)
+        TextButton(
+            onClick = onBack,
+            modifier = Modifier
+                .heightIn(min = EsSize.minTarget)
+                .semantics { contentDescription = backDescription },
+        ) {
+            Icon(EsIcons.Back, contentDescription = null)
+            Text(
+                text = backLabel,
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(start = EsSpace.s8),
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        if (isSaved != null) SaveButton(isSaved = isSaved, onClick = onToggleSave)
+    }
+}
+
+// Icon and word both change, so the state never relies on the icon alone.
+@Composable
+private fun SaveButton(isSaved: Boolean, onClick: () -> Unit) {
+    val state = stringResource(if (isSaved) R.string.save_state_saved else R.string.save_state_not_saved)
+    TextButton(
+        onClick = onClick,
+        modifier = Modifier
+            .heightIn(min = EsSize.minTarget)
+            .semantics { stateDescription = state },
+    ) {
+        Icon(if (isSaved) EsIcons.Saved else EsIcons.Save, contentDescription = null)
         Text(
-            text = backLabel,
+            text = stringResource(if (isSaved) R.string.saved_action else R.string.save_action),
             style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(start = EsSpace.s8),
+            modifier = Modifier.padding(start = EsSpace.s4),
         )
     }
 }
@@ -130,7 +216,9 @@ private fun StoryContent(article: Article, onReadFullStory: (String) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(start = EsSpace.screen, end = EsSpace.screen, top = EsSpace.s8, bottom = EsSpace.s48),
+            // The Save snackbar sits at the bottom for 10 seconds; this lets the reader scroll
+            // Read the full story clear of it.
+            .padding(start = EsSpace.screen, end = EsSpace.screen, top = EsSpace.s8, bottom = EsSize.snackbarClearance),
     ) {
         Text(
             text = article.title,
@@ -253,23 +341,25 @@ private fun ReadFullStoryButton(domain: String, onClick: () -> Unit) {
 @Preview(showBackground = true, widthDp = 360, heightDp = 760)
 @Composable
 private fun StoryScreenPreview() {
+    val article = Article(
+        key = "preview",
+        title = "A river town rewrites its flood plan after a third storm in ten years",
+        description = "After three major floods since 2016, Northfield will move homes off the lowest streets.",
+        content = "The council voted 7–2 on Thursday to offer voluntary buyouts…",
+        url = "https://www.northfieldpost.com/flood-plan",
+        imageUrl = null,
+        source = ArticleSource(id = null, name = "Northfield Post"),
+        author = "Dana Ruiz",
+        publishedAt = Instant.parse("2026-10-24T07:40:00Z"),
+    )
     EveryStoryTheme {
         StoryScreen(
-            uiState = StoryUiState.Ready(
-                Article(
-                    key = "preview",
-                    title = "A river town rewrites its flood plan after a third storm in ten years",
-                    description = "After three major floods since 2016, Northfield will move homes off the lowest streets.",
-                    content = "The council voted 7–2 on Thursday to offer voluntary buyouts…",
-                    url = "https://www.northfieldpost.com/flood-plan",
-                    imageUrl = null,
-                    source = ArticleSource(id = null, name = "Northfield Post"),
-                    author = "Dana Ruiz",
-                    publishedAt = Instant.parse("2026-10-24T07:40:00Z"),
-                ),
-            ),
+            uiState = StoryUiState(content = StoryContent.Ready(article), isSaved = true),
             backLabel = "Today",
             onBack = {},
+            onToggleSave = {},
+            onUndo = {},
+            onMessageShown = {},
             onReadFullStory = {},
         )
     }

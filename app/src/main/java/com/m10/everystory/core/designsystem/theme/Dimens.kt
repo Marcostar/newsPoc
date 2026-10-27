@@ -40,6 +40,7 @@ object EsSize {
     val hairline = 1.dp
     val sourceBadge = 40.dp
     val sourceButton = 64.dp
+    val snackbarClearance = 96.dp // room to scroll content clear of a snackbar
 }
 
 object EsRadius {

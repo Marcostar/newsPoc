@@ -49,6 +49,20 @@
     <string name="story_preview_note">This is the preview NewsAPI shares. The full story is on %1$s.</string>
     <string name="read_full_story">Read the full story</string>
     <string name="read_full_story_description">Read the full story at %1$s, opens in browser</string>
+    <string name="save_action">Save</string>
+    <string name="saved_action">Saved</string>
+    <string name="save_state_saved">In your saved list</string>
+    <string name="save_state_not_saved">Not saved</string>
+    <string name="snackbar_saved">Saved to your list</string>
+    <string name="snackbar_removed">Removed from your list</string>
+    <string name="undo">Undo</string>
+
+    <string name="saved_empty_title">Nothing saved yet</string>
+    <string name="saved_empty_body">Tap Save on any story. Saved stories open without a connection.</string>
+    <plurals name="saved_count">
+        <item quantity="one">%d saved story · opens without a connection</item>
+        <item quantity="other">%d saved stories · open without a connection</item>
+    </plurals>
     <string name="story_missing_title">This story isn’t available</string>
     <string name="story_missing_body">It has dropped out of the news we keep on your phone. Go back for the latest stories.</string>
 
