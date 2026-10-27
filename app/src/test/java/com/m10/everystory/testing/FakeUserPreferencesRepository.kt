@@ -1,5 +1,6 @@
 package com.m10.everystory.testing
 
+import com.m10.everystory.domain.model.ListenRate
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.TextSize
 import com.m10.everystory.domain.model.ThemeSetting
@@ -50,5 +51,12 @@ class FakeUserPreferencesRepository(tourSeen: Boolean = false) : UserPreferences
 
     override suspend fun setTourSeen() {
         seen.value = true
+    }
+
+    private val rate = MutableStateFlow(ListenRate.DEFAULT)
+    override val listenRate: StateFlow<Float> get() = rate
+
+    override suspend fun setListenRate(rate: Float) {
+        this.rate.value = rate
     }
 }

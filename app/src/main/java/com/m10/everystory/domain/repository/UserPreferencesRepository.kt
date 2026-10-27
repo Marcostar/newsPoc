@@ -32,4 +32,9 @@ interface UserPreferencesRepository {
     val tourSeen: Flow<Boolean>
 
     suspend fun setTourSeen()
+
+    // One of ListenRate.rates.
+    val listenRate: Flow<Float>
+
+    suspend fun setListenRate(rate: Float)
 }

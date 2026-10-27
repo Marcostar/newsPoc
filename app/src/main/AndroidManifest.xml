@@ -8,6 +8,13 @@
     <!-- Only for the "read it later" reminder, asked for the first time a story is saved. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Read aloud: from Android 11 the text-to-speech engine is invisible to us without this. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".EveryStoryApplication"
         android:allowBackup="true"

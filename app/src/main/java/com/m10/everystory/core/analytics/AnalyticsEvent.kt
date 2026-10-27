@@ -36,6 +36,9 @@ sealed class AnalyticsEvent(
     data class StoryLinkOut(val source: String) :
         AnalyticsEvent("story_link_out", mapOf("source" to source))
 
+    data class ListenStart(val source: String, val rate: Float) :
+        AnalyticsEvent("listen_start", mapOf("source" to source, "listen_rate" to rate.toString()))
+
     data class StorySave(val source: String) :
         AnalyticsEvent("story_save", mapOf("source" to source))
 

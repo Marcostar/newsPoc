@@ -49,6 +49,8 @@ object EsSize {
     val tourDotActive = 20.dp
     val usageChart = 120.dp
     val usageBar = 8.dp
+    val outlineButton = 1.5.dp // Listen's pill border
+    val playerProgress = 4.dp
 }
 
 object EsRadius {

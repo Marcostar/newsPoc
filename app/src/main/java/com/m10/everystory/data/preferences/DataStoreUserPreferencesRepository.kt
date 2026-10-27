@@ -4,9 +4,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.m10.everystory.domain.model.ListenRate
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.TextSize
 import com.m10.everystory.domain.model.ThemeSetting
@@ -21,6 +23,7 @@ private val NEWS_LANGUAGE = stringPreferencesKey("news_language")
 private val SAVED_LAST_VIEWED_AT = longPreferencesKey("saved_last_viewed_at")
 private val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_permission_asked")
 private val TOUR_SEEN = booleanPreferencesKey("tour_seen")
+private val LISTEN_RATE = floatPreferencesKey("listen_rate")
 
 class DataStoreUserPreferencesRepository(
     private val dataStore: DataStore<Preferences>,
@@ -72,5 +75,11 @@ class DataStoreUserPreferencesRepository(
 
     override suspend fun setTourSeen() {
         dataStore.edit { it[TOUR_SEEN] = true }
+    }
+
+    override val listenRate: Flow<Float> = dataStore.data.map { prefs -> ListenRate.valid(prefs[LISTEN_RATE]) }
+
+    override suspend fun setListenRate(rate: Float) {
+        dataStore.edit { it[LISTEN_RATE] = ListenRate.valid(rate) }
     }
 }

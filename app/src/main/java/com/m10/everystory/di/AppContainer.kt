@@ -23,6 +23,8 @@ import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.core.network.ConnectivityManagerNetworkMonitor
 import com.m10.everystory.core.network.NetworkMonitor
+import com.m10.everystory.core.speech.AndroidSpeechPlayer
+import com.m10.everystory.core.speech.SpeechPlayer
 import com.m10.everystory.data.apikey.KeystoreApiKeyRepository
 import com.m10.everystory.data.apikey.KeystoreCipher
 import com.m10.everystory.data.news.DefaultNewsRepository
@@ -83,6 +85,9 @@ interface AppContainer {
 
     // Hands background workers their dependencies (see EveryStoryApplication).
     val workerFactory: WorkerFactory
+
+    // A new one per story: it holds the text-to-speech engine only while that story is open.
+    fun createSpeechPlayer(): SpeechPlayer
 }
 
 class DefaultAppContainer(
@@ -175,6 +180,8 @@ class DefaultAppContainer(
     }
 
     override val adConsent: AdConsent by lazy { AdConsent(context) }
+
+    override fun createSpeechPlayer(): SpeechPlayer = AndroidSpeechPlayer(context)
 
     override val savedReminderNotifier: SavedReminderNotifier by lazy { SavedReminderNotifier(context) }
 

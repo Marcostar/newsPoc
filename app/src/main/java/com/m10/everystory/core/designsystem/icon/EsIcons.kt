@@ -19,6 +19,8 @@ import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.FormatSize
 import androidx.compose.material.icons.rounded.Headphones
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Info
@@ -64,6 +66,8 @@ object EsIcons {
     val You = Icons.Rounded.Person
     val Listen = Icons.Rounded.Headphones
     val Stop = Icons.Rounded.Stop
+    val Pause = Icons.Rounded.Pause
+    val Play = Icons.Rounded.PlayArrow
     val Speed = Icons.Rounded.Speed
     val TextSize = Icons.Rounded.FormatSize
     val Accessibility = Icons.Rounded.AccessibilityNew
