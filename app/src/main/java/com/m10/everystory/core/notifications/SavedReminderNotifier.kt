@@ -54,7 +54,7 @@ class SavedReminderNotifier(private val context: Context) {
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
     }
 
-    // A fresh task, so the nav graph builds the stack from the link: Today underneath, Saved on top.
+    // A fresh task; MainActivity sees the link and switches to the Saved tab (Today stays underneath).
     private fun openSavedIntent(): PendingIntent {
         val intent = Intent(Intent.ACTION_VIEW, SAVED_DEEP_LINK.toUri())
             .setPackage(context.packageName)

@@ -7,17 +7,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import com.m10.everystory.R
 import com.m10.everystory.core.designsystem.theme.EsMotion
-import com.m10.everystory.core.notifications.SAVED_DEEP_LINK
 import com.m10.everystory.core.ui.LocalNavAnimatedVisibilityScope
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalSharedTransitionScope
@@ -36,6 +35,7 @@ fun EsNavHost(
     isTourRunning: Boolean,
     onStartTour: () -> Unit,
     onOpenDisplaySettings: () -> Unit,
+    openSavedOnStart: Boolean,
     modifier: Modifier = Modifier,
 ) {
     // Short, calm fades between screens (the library default is 700ms). Reduced motion keeps a
@@ -66,7 +66,7 @@ fun EsNavHost(
                         )
                     }
                 }
-                composable<SavedDestination>(deepLinks = listOf(navDeepLink { uriPattern = SAVED_DEEP_LINK })) {
+                composable<SavedDestination> {
                     WithSharedElements {
                         SavedRoute(
                             onSearchClick = { navController.navigate(SearchDestination) },
@@ -115,6 +115,12 @@ fun EsNavHost(
                 }
             }
         }
+    }
+
+    // Opened from the saved-stories reminder. Done with the same call as tapping the Saved tab: a nav
+    // deep link builds its own back stack, and the Today tab then restored Saved instead of Today.
+    if (openSavedOnStart) {
+        LaunchedEffect(Unit) { navController.navigateToTopLevel(TopLevelDestination.Saved) }
     }
 }
 

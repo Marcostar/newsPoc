@@ -53,6 +53,7 @@ import com.m10.everystory.navigation.topLevelDestination
 
 @Composable
 fun EveryStoryApp(
+    openSavedOnStart: Boolean,
     connectivity: ConnectivityStatus,
     onBackOnlineHandled: () -> Unit,
     onScreenViewed: (AnalyticsScreen) -> Unit,
@@ -142,6 +143,7 @@ fun EveryStoryApp(
                     isTourRunning = tourStep != null,
                     onStartTour = tourViewModel::onStart,
                     onOpenDisplaySettings = { showDisplaySettings = true },
+                    openSavedOnStart = openSavedOnStart,
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)

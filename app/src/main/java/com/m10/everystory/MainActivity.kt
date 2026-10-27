@@ -25,10 +25,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         splashScreen.setKeepOnScreenCondition { viewModel.appearance.value == null }
 
-        // Opened from the saved-stories reminder; the nav graph does the navigating itself.
-        if (savedInstanceState == null && intent?.data?.toString() == SAVED_DEEP_LINK) {
-            viewModel.onNotificationOpened()
-        }
+        // Opened from the saved-stories reminder. Only on a fresh start: after rotation the nav state
+        // already remembers where the reader is.
+        val openSavedOnStart = savedInstanceState == null && intent?.data?.toString() == SAVED_DEEP_LINK
+        if (openSavedOnStart) viewModel.onNotificationOpened()
 
         // The consent form needs an Activity, so the activity starts it; ads wait for the answer.
         val adConsent = (application as EveryStoryApplication).container.adConsent
@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
                 val canShowAds by adConsent.canShowAds.collectAsStateWithLifecycle()
                 val connectivity by viewModel.connectivity.collectAsStateWithLifecycle()
                 EveryStoryApp(
+                    openSavedOnStart = openSavedOnStart,
                     connectivity = connectivity,
                     onBackOnlineHandled = viewModel::onBackOnlineHandled,
                     onScreenViewed = viewModel::onScreenViewed,
