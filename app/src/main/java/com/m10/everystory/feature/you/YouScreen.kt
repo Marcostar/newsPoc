@@ -52,6 +52,7 @@ fun YouRoute(
     onClose: () -> Unit,
     onStartTour: () -> Unit,
     onOpenDisplaySettings: () -> Unit,
+    onOpenDataUsage: () -> Unit,
     viewModel: YouViewModel = viewModel(factory = YouViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -65,6 +66,7 @@ fun YouRoute(
         onThemeSelected = viewModel::onThemeSelected,
         onStartTour = onStartTour,
         onOpenDisplaySettings = onOpenDisplaySettings,
+        onOpenDataUsage = onOpenDataUsage,
         onNewsApiClick = { context.openInCustomTab(NEWS_API_URL, toolbarColor) },
     )
 }
@@ -78,6 +80,7 @@ fun YouScreen(
     onThemeSelected: (ThemeSetting) -> Unit,
     onStartTour: () -> Unit,
     onOpenDisplaySettings: () -> Unit,
+    onOpenDataUsage: () -> Unit,
     onNewsApiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -102,6 +105,14 @@ fun YouScreen(
                 title = stringResource(R.string.you_display),
                 subtitle = stringResource(R.string.you_display_detail),
                 onClick = onOpenDisplaySettings,
+            )
+
+            SectionLabel(stringResource(R.string.you_data_section))
+            AboutRow(
+                icon = EsIcons.DataUsage,
+                title = stringResource(R.string.you_data),
+                subtitle = stringResource(R.string.you_data_detail),
+                onClick = onOpenDataUsage,
             )
 
             SectionLabel(stringResource(R.string.you_help))
@@ -226,6 +237,7 @@ private fun YouScreenPreview() {
             onThemeSelected = {},
             onStartTour = {},
             onOpenDisplaySettings = {},
+            onOpenDataUsage = {},
             onNewsApiClick = {},
         )
     }

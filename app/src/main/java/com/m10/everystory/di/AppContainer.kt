@@ -1,6 +1,8 @@
 package com.m10.everystory.di
 
+import android.app.usage.NetworkStatsManager
 import android.content.Context
+import android.net.ConnectivityManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -19,10 +21,19 @@ import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.data.preferences.DataStoreUserPreferencesRepository
 import com.m10.everystory.data.saved.RoomSavedArticlesRepository
 import com.m10.everystory.data.search.DataStoreRecentSearchesRepository
+import com.m10.everystory.data.usage.AndroidDataUsageRepository
+import com.m10.everystory.data.usage.CountingInterceptor
+import com.m10.everystory.data.usage.TrafficCounter
+import com.m10.everystory.data.usage.currentNetworkKind
+import com.m10.everystory.domain.model.TrafficCategory
+import com.m10.everystory.domain.repository.DataUsageRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
 import com.m10.everystory.domain.repository.SavedArticlesRepository
 import com.m10.everystory.domain.repository.UserPreferencesRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -37,6 +48,7 @@ private const val CONNECT_TIMEOUT_SECONDS = 10L
 private const val READ_TIMEOUT_SECONDS = 15L
 private const val PREFERENCES_FILE = "user_prefs"
 private const val DATABASE_FILE = "everystory.db"
+private const val DATA_USAGE_FILE = "data_usage"
 
 // Manual DI: everything the app shares is created here once, and ViewModel
 // factories pull what they need from it.
@@ -47,6 +59,10 @@ interface AppContainer {
     val savedArticlesRepository: SavedArticlesRepository
     val analyticsTracker: AnalyticsTracker
     val adConsent: AdConsent
+    val dataUsageRepository: DataUsageRepository
+
+    // Coil's image downloads go through this client so their bytes are counted too.
+    val imageHttpClient: OkHttpClient
 }
 
 class DefaultAppContainer(
@@ -58,9 +74,27 @@ class DefaultAppContainer(
         coerceInputValues = true
     }
 
+    // Lives as long as the app: for small background writes that must finish even if a screen closes.
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private val connectivityManager: ConnectivityManager by lazy {
+        context.getSystemService(ConnectivityManager::class.java)
+    }
+
+    private val trafficCounter: TrafficCounter by lazy {
+        TrafficCounter(
+            dataStore = PreferenceDataStoreFactory.create { context.preferencesDataStoreFile(DATA_USAGE_FILE) },
+            scope = applicationScope,
+        )
+    }
+
+    private fun countingInterceptor(category: TrafficCategory) =
+        CountingInterceptor(category, trafficCounter) { connectivityManager.currentNetworkKind() }
+
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(ApiKeyInterceptor(BuildConfig.NEWS_API_KEY))
+            .addNetworkInterceptor(countingInterceptor(TrafficCategory.Stories))
             .apply { if (BuildConfig.DEBUG) addInterceptor(loggingInterceptor()) }
             .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -109,6 +143,19 @@ class DefaultAppContainer(
     }
 
     override val adConsent: AdConsent by lazy { AdConsent(context) }
+
+    override val imageHttpClient: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addNetworkInterceptor(countingInterceptor(TrafficCategory.Images))
+            .build()
+    }
+
+    override val dataUsageRepository: DataUsageRepository by lazy {
+        AndroidDataUsageRepository(
+            networkStatsManager = context.getSystemService(NetworkStatsManager::class.java),
+            trafficCounter = trafficCounter,
+        )
+    }
 
     private fun loggingInterceptor() =
         HttpLoggingInterceptor { message -> Timber.tag("OkHttp").d(message) }.apply {

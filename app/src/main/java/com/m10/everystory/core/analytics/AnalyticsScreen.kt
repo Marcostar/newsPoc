@@ -7,4 +7,5 @@ enum class AnalyticsScreen(val value: String) {
     Story("story"),
     Saved("saved"),
     You("you"),
+    DataUsage("data_usage"),
 }

@@ -145,6 +145,25 @@
     <string name="language_english_fr">French</string>
     <string name="language_english_ar">Arabic</string>
 
+    <!-- Data used -->
+    <string name="you_data">Data used</string>
+    <string name="you_data_detail">This month, on mobile data and Wi-Fi</string>
+    <string name="you_data_section">Data</string>
+    <string name="data_title">Data used</string>
+    <string name="data_mobile">Mobile data</string>
+    <string name="data_wifi">Wi-Fi</string>
+    <string name="data_this_month">This month</string>
+    <string name="data_since_mobile">On mobile data since %1$s</string>
+    <string name="data_since_wifi">On Wi-Fi since %1$s</string>
+    <string name="data_system_unavailable">This phone doesn\'t share its mobile data count with apps, so this is only what EveryStory measured itself.</string>
+    <string name="data_last_seven_days">Last 7 days</string>
+    <string name="data_chart_description">Last 7 days: %1$s</string>
+    <string name="data_breakdown">What used it</string>
+    <string name="data_stories">Stories and search</string>
+    <string name="data_images">Images</string>
+    <string name="data_ads_and_other">Ads and other</string>
+    <string name="data_note">Android counts everything this app sends and receives. EveryStory measures stories and images itself; ads and other is the rest: the ad banner, Firebase and Google Play services. Android adds up its figures every so often, so the newest use can take a little while to appear.</string>
+
     <!-- Ads -->
     <string name="ad_label">Ad</string>
     <string name="ad_description">Advertisement</string>

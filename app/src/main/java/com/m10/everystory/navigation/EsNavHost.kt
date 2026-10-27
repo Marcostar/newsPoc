@@ -19,6 +19,7 @@ import com.m10.everystory.core.designsystem.theme.EsMotion
 import com.m10.everystory.core.ui.LocalNavAnimatedVisibilityScope
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalSharedTransitionScope
+import com.m10.everystory.feature.datausage.DataUsageRoute
 import com.m10.everystory.feature.saved.SavedRoute
 import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.story.StoryRoute
@@ -80,7 +81,11 @@ fun EsNavHost(
                             navController.navigateToTopLevel(TopLevelDestination.Today)
                         },
                         onOpenDisplaySettings = onOpenDisplaySettings,
+                        onOpenDataUsage = { navController.navigate(DataUsageDestination) },
                     )
+                }
+                composable<DataUsageDestination> {
+                    DataUsageRoute(onBack = { navController.popBackStack() })
                 }
                 composable<SearchDestination> {
                     WithSharedElements {

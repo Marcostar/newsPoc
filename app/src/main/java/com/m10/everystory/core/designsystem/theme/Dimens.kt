@@ -47,6 +47,8 @@ object EsSize {
     val spotlightCorner = 16.dp
     val tourDot = 8.dp
     val tourDotActive = 20.dp
+    val usageChart = 120.dp
+    val usageBar = 8.dp
 }
 
 object EsRadius {

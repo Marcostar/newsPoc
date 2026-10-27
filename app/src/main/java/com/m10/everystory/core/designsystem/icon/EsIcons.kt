@@ -9,6 +9,7 @@ import androidx.compose.material.icons.rounded.AccessibilityNew
 import androidx.compose.material.icons.rounded.Bookmark
 import androidx.compose.material.icons.rounded.BookmarkBorder
 import androidx.compose.material.icons.rounded.Bookmarks
+import androidx.compose.material.icons.rounded.Campaign
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.CloudOff
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.FormatSize
 import androidx.compose.material.icons.rounded.Headphones
 import androidx.compose.material.icons.rounded.History
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.Mail
@@ -69,6 +71,8 @@ object EsIcons {
     val NotificationsOff = Icons.Rounded.NotificationsOff
     val NotificationsActive = Icons.Rounded.NotificationsActive
     val DataUsage = Icons.Rounded.DataUsage
+    val Images = Icons.Rounded.Image
+    val Ads = Icons.Rounded.Campaign
     val DownloadDone = Icons.Rounded.DownloadDone
     val Offline = Icons.Rounded.CloudOff
     val Wifi = Icons.Rounded.Wifi
