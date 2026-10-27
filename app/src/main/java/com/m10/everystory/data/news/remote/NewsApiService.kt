@@ -1,0 +1,32 @@
+package com.m10.everystory.data.news.remote
+
+import com.m10.everystory.data.news.remote.dto.ArticlesResponseDto
+import com.m10.everystory.data.news.remote.dto.SourcesResponseDto
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface NewsApiService {
+
+    @GET("top-headlines")
+    suspend fun topHeadlines(
+        @Query("language") language: String,
+        @Query("category") category: String?,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): ArticlesResponseDto
+
+    @GET("everything")
+    suspend fun everything(
+        @Query("q") query: String,
+        @Query("language") language: String,
+        @Query("sortBy") sortBy: String,
+        @Query("page") page: Int,
+        @Query("pageSize") pageSize: Int,
+    ): ArticlesResponseDto
+
+    @GET("top-headlines/sources")
+    suspend fun sources(
+        @Query("category") category: String?,
+        @Query("language") language: String,
+    ): SourcesResponseDto
+}
