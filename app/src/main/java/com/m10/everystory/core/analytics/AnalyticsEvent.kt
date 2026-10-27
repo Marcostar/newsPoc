@@ -65,6 +65,10 @@ sealed class AnalyticsEvent(
     data class TourSkip(val step: TourStep) :
         AnalyticsEvent("tour_skip", mapOf("step" to (step.ordinal + 1).toString()))
 
+    // Never the key itself, only that one was added or removed.
+    data class OwnApiKey(val saved: Boolean) :
+        AnalyticsEvent("own_api_key", mapOf("action" to if (saved) "saved" else "removed"))
+
     data class ThemeChange(val theme: ThemeSetting) :
         AnalyticsEvent("theme_change", mapOf("theme" to theme.name.lowercase()))
 }

@@ -15,6 +15,7 @@ import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.ArticlePage
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
+import com.m10.everystory.domain.repository.ApiKeyRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.UserPreferencesRepository
 import kotlinx.coroutines.Job
@@ -30,6 +31,7 @@ class TodayViewModel(
     private val newsRepository: NewsRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
     private val networkMonitor: NetworkMonitor,
+    private val apiKeyRepository: ApiKeyRepository,
     private val analytics: AnalyticsTracker,
     private val now: () -> Instant = Instant::now,
 ) : ViewModel() {
@@ -62,6 +64,9 @@ class TodayViewModel(
         // Only changes the status line; coming back online never reloads by itself.
         viewModelScope.launch {
             networkMonitor.isOnline.collect { online -> _uiState.update { it.copy(isOffline = !online) } }
+        }
+        viewModelScope.launch {
+            apiKeyRepository.ownKey.collect { key -> _uiState.update { it.copy(usingOwnKey = key != null) } }
         }
     }
 
@@ -104,6 +109,15 @@ class TodayViewModel(
 
         feedJob = viewModelScope.launch {
             refreshFirstPage(state.selectedCategory, state.newsLanguage, previousKeys)
+        }
+    }
+
+    // Offered when NewsAPI turns down the reader's own key: drop it and try again with ours.
+    fun onUseBuiltInKey() {
+        analytics.log(AnalyticsEvent.OwnApiKey(saved = false))
+        viewModelScope.launch {
+            apiKeyRepository.removeOwnKey()
+            onRefresh()
         }
     }
 
@@ -221,6 +235,7 @@ class TodayViewModel(
                     newsRepository = app.container.newsRepository,
                     userPreferencesRepository = app.container.userPreferencesRepository,
                     networkMonitor = app.container.networkMonitor,
+                    apiKeyRepository = app.container.apiKeyRepository,
                     analytics = app.container.analyticsTracker,
                 )
             }

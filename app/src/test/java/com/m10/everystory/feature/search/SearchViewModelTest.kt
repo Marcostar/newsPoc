@@ -6,7 +6,9 @@ import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsLanguage
+import org.junit.Assert.assertFalse
 import com.m10.everystory.testing.FakeAnalyticsTracker
+import com.m10.everystory.testing.FakeApiKeyRepository
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeRecentSearchesRepository
 import com.m10.everystory.testing.FakeUserPreferencesRepository
@@ -32,9 +34,10 @@ class SearchViewModelTest {
     private val recent = FakeRecentSearchesRepository()
     private val analytics = FakeAnalyticsTracker()
     private val preferences = FakeUserPreferencesRepository()
+    private val keys = FakeApiKeyRepository()
 
     private fun createViewModel(savedState: SavedStateHandle = SavedStateHandle()) =
-        SearchViewModel(news, recent, preferences, analytics, savedState)
+        SearchViewModel(news, recent, preferences, keys, analytics, savedState)
 
     @Test
     fun `typing waits for a pause before searching`() = runTest {
@@ -224,5 +227,25 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(NewsLanguage.French), news.searchLanguages)
+    }
+
+    @Test
+    fun `a rejected own key can be swapped for the built-in one and the search runs again`() = runTest {
+        keys.ownKey.value = "0123456789abcdef0123456789abcdef"
+        news.searchResults += AppResult.Failure(AppError.Unauthorized)
+        news.searchResults += testPage(1, listOf("a"))
+        val viewModel = createViewModel()
+        viewModel.onQueryChange("levee")
+        viewModel.onSubmit()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.usingOwnKey)
+
+        viewModel.onUseBuiltInKey()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.usingOwnKey)
+        assertEquals(SearchResults.Loaded, state.results)
+        assertEquals(listOf("levee" to 1, "levee" to 1), news.searchRequests)
     }
 }

@@ -21,6 +21,7 @@ import com.m10.everystory.core.ui.LocalNavAnimatedVisibilityScope
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalSharedTransitionScope
 import com.m10.everystory.feature.datausage.DataUsageRoute
+import com.m10.everystory.feature.developer.DeveloperSettingsRoute
 import com.m10.everystory.feature.saved.SavedRoute
 import com.m10.everystory.feature.search.SearchRoute
 import com.m10.everystory.feature.story.StoryRoute
@@ -63,6 +64,7 @@ fun EsNavHost(
                             onSearchClick = { navController.navigate(SearchDestination) },
                             onAaClick = onOpenDisplaySettings,
                             onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
+                            onLogoTripleTap = { navController.navigate(DeveloperDestination) { launchSingleTop = true } },
                         )
                     }
                 }
@@ -84,6 +86,14 @@ fun EsNavHost(
                         },
                         onOpenDisplaySettings = onOpenDisplaySettings,
                         onOpenDataUsage = { navController.navigate(DataUsageDestination) },
+                    )
+                }
+                composable<DeveloperDestination> {
+                    DeveloperSettingsRoute(
+                        onBack = { navController.popBackStack() },
+                        // Pop rather than navigateToTopLevel(Today): that would save this screen as
+                        // Today's tab state and restore it straight back.
+                        onClose = { navController.popBackStack(TodayDestination, inclusive = false) },
                     )
                 }
                 composable<DataUsageDestination> {

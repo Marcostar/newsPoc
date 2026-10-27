@@ -36,6 +36,9 @@ interface NewsRepository {
         language: NewsLanguage = NewsLanguage.Default,
     ): AppResult<List<NewsSource>>
 
+    // Asks NewsAPI whether it accepts this key, without switching to it.
+    suspend fun checkApiKey(key: String): AppResult<Unit>
+
     // NewsAPI can't fetch one article by id, so this reads the copy cached when a feed or search loaded it.
     suspend fun article(key: String): Article?
 }

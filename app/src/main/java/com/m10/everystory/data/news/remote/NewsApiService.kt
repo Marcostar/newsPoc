@@ -1,8 +1,10 @@
 package com.m10.everystory.data.news.remote
 
+import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.data.news.remote.dto.ArticlesResponseDto
 import com.m10.everystory.data.news.remote.dto.SourcesResponseDto
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Query
 
 interface NewsApiService {
@@ -32,4 +34,12 @@ interface NewsApiService {
         @Query("category") category: String?,
         @Query("language") language: String,
     ): SourcesResponseDto
+
+    // The cheapest real request: one story, sent with the key being tried rather than the one in use.
+    @GET("top-headlines")
+    suspend fun checkKey(
+        @Header(API_KEY_HEADER) apiKey: String,
+        @Query("language") language: String,
+        @Query("pageSize") pageSize: Int = 1,
+    ): ArticlesResponseDto
 }

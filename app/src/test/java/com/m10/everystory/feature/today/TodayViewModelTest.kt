@@ -9,6 +9,7 @@ import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.domain.model.NewsLanguage
 import com.m10.everystory.domain.model.CachedHeadlines
 import com.m10.everystory.testing.FakeAnalyticsTracker
+import com.m10.everystory.testing.FakeApiKeyRepository
 import com.m10.everystory.testing.FakeNetworkMonitor
 import com.m10.everystory.testing.FakeNewsRepository
 import com.m10.everystory.testing.FakeUserPreferencesRepository
@@ -35,9 +36,10 @@ class TodayViewModelTest {
     private val analytics = FakeAnalyticsTracker()
     private val preferences = FakeUserPreferencesRepository()
     private val network = FakeNetworkMonitor()
+    private val keys = FakeApiKeyRepository()
     private val fixedNow = Instant.parse("2026-10-26T09:30:00Z")
 
-    private fun createViewModel() = TodayViewModel(repository, preferences, network, analytics, now = { fixedNow })
+    private fun createViewModel() = TodayViewModel(repository, preferences, network, keys, analytics, now = { fixedNow })
 
     @Test
     fun `first load shows headlines and ends the launch screen`() = runTest {
@@ -113,6 +115,29 @@ class TodayViewModelTest {
         advanceUntilIdle()
         assertFalse(viewModel.uiState.value.isOffline)
         assertEquals(1, repository.headlineRequests.size)
+    }
+
+    @Test
+    fun `a rejected own key can be swapped for the built-in one, which refreshes`() = runTest {
+        keys.ownKey.value = "0123456789abcdef0123456789abcdef"
+        repository.headlineResults += testPage(1, listOf("a"))
+        repository.headlineResults += AppResult.Failure(AppError.Unauthorized)
+        repository.headlineResults += testPage(1, listOf("b", "a"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onRefresh()
+        advanceUntilIdle()
+        assertTrue(viewModel.uiState.value.usingOwnKey)
+        assertEquals(RefreshOutcome.Failed(AppError.Unauthorized), viewModel.uiState.value.lastRefresh)
+
+        viewModel.onUseBuiltInKey()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.usingOwnKey)
+        assertEquals(listOf("b", "a"), state.articles.map { it.key })
+        assertEquals(RefreshOutcome.Updated(newStories = 1), state.lastRefresh)
+        assertTrue(AnalyticsEvent.OwnApiKey(saved = false) in analytics.events)
     }
 
     @Test

@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.m10.everystory.R
+import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.designsystem.component.EsMessage
 import com.m10.everystory.core.designsystem.component.PagingFooter
@@ -80,6 +81,7 @@ fun SearchRoute(
             onArticleClick(article)
         },
         onRetry = viewModel::onRetry,
+        onUseBuiltInKey = viewModel::onUseBuiltInKey,
         onLoadMore = viewModel::onLoadMore,
         onRetryLoadMore = viewModel::onRetryLoadMore,
     )
@@ -95,6 +97,7 @@ fun SearchScreen(
     onRecentSearchClick: (String) -> Unit,
     onArticleClick: (Article) -> Unit,
     onRetry: () -> Unit,
+    onUseBuiltInKey: () -> Unit,
     onLoadMore: () -> Unit,
     onRetryLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
@@ -119,7 +122,7 @@ fun SearchScreen(
             contentPadding = PaddingValues(bottom = EsSpace.s48),
             modifier = Modifier.fillMaxSize(),
         ) {
-            searchContent(uiState, onRecentSearchClick, onArticleClick, onRetry, onRetryLoadMore)
+            searchContent(uiState, onRecentSearchClick, onArticleClick, onRetry, onUseBuiltInKey, onRetryLoadMore)
         }
     }
 }
@@ -180,6 +183,7 @@ private fun LazyListScope.searchContent(
     onRecentSearchClick: (String) -> Unit,
     onArticleClick: (Article) -> Unit,
     onRetry: () -> Unit,
+    onUseBuiltInKey: () -> Unit,
     onRetryLoadMore: () -> Unit,
 ) {
     val itemModifier = Modifier.padding(horizontal = EsSpace.screen)
@@ -192,12 +196,14 @@ private fun LazyListScope.searchContent(
 
         is SearchResults.Failed -> item(key = "error") {
             val message = results.error.toErrorMessage()
+            // Retrying a rejected key of the reader's own would only fail again.
+            val ownKeyRejected = results.error == AppError.Unauthorized && uiState.usingOwnKey
             EsMessage(
                 icon = message.icon,
                 title = stringResource(message.title),
-                body = stringResource(message.body),
-                actionLabel = stringResource(R.string.try_again),
-                onAction = onRetry,
+                body = stringResource(if (ownKeyRejected) R.string.error_own_key_body else message.body),
+                actionLabel = stringResource(if (ownKeyRejected) R.string.use_builtin_key else R.string.try_again),
+                onAction = if (ownKeyRejected) onUseBuiltInKey else onRetry,
                 modifier = itemModifier.animateStoryItem(this),
             )
         }
@@ -315,6 +321,7 @@ private fun SearchIdlePreview() {
             onRecentSearchClick = {},
             onArticleClick = {},
             onRetry = {},
+            onUseBuiltInKey = {},
             onLoadMore = {},
             onRetryLoadMore = {},
         )

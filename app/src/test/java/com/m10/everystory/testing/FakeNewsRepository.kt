@@ -45,6 +45,14 @@ class FakeNewsRepository : NewsRepository {
     override suspend fun sources(category: NewsCategory?, language: NewsLanguage): AppResult<List<NewsSource>> =
         error("Not used in this test")
 
+    val checkedKeys = mutableListOf<String>()
+    var keyCheckResult: AppResult<Unit> = AppResult.Success(Unit)
+
+    override suspend fun checkApiKey(key: String): AppResult<Unit> {
+        checkedKeys += key
+        return keyCheckResult
+    }
+
     val cachedArticles = mutableMapOf<String, Article>()
 
     override suspend fun article(key: String): Article? = cachedArticles[key]

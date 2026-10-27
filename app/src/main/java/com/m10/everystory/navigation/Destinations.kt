@@ -23,6 +23,10 @@ data class StoryDestination(val articleKey: String)
 @Serializable
 data object DataUsageDestination
 
+// Hidden: opened by tapping the EveryStory name on Today three times.
+@Serializable
+data object DeveloperDestination
+
 fun NavDestination.analyticsScreen(): AnalyticsScreen? = when {
     hasRoute<TodayDestination>() -> AnalyticsScreen.Today
     hasRoute<SavedDestination>() -> AnalyticsScreen.Saved
@@ -30,5 +34,6 @@ fun NavDestination.analyticsScreen(): AnalyticsScreen? = when {
     hasRoute<SearchDestination>() -> AnalyticsScreen.Search
     hasRoute<StoryDestination>() -> AnalyticsScreen.Story
     hasRoute<DataUsageDestination>() -> AnalyticsScreen.DataUsage
+    hasRoute<DeveloperDestination>() -> AnalyticsScreen.Developer
     else -> null
 }

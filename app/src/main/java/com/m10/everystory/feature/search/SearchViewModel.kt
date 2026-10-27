@@ -14,6 +14,7 @@ import com.m10.everystory.core.analytics.AnalyticsTracker
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsLanguage
+import com.m10.everystory.domain.repository.ApiKeyRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
 import com.m10.everystory.domain.repository.UserPreferencesRepository
@@ -34,6 +35,7 @@ class SearchViewModel(
     private val newsRepository: NewsRepository,
     private val recentSearchesRepository: RecentSearchesRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val apiKeyRepository: ApiKeyRepository,
     private val analytics: AnalyticsTracker,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -53,6 +55,9 @@ class SearchViewModel(
             recentSearchesRepository.recentSearches.collect { recent ->
                 _uiState.update { it.copy(recentSearches = recent) }
             }
+        }
+        viewModelScope.launch {
+            apiKeyRepository.ownKey.collect { key -> _uiState.update { it.copy(usingOwnKey = key != null) } }
         }
         // Coming back after process death: run the query that was on screen.
         _uiState.value.query.trim().takeIf { it.length >= MIN_QUERY_LENGTH }?.let(::searchNow)
@@ -101,6 +106,15 @@ class SearchViewModel(
     fun onRetry() {
         val query = _uiState.value.searchedQuery.ifEmpty { _uiState.value.query.trim() }
         if (query.length >= MIN_QUERY_LENGTH) searchNow(query)
+    }
+
+    // Offered when NewsAPI turns down the reader's own key: drop it and run the search again.
+    fun onUseBuiltInKey() {
+        analytics.log(AnalyticsEvent.OwnApiKey(saved = false))
+        viewModelScope.launch {
+            apiKeyRepository.removeOwnKey()
+            onRetry()
+        }
     }
 
     // Opening a result is a good sign the query was worth keeping.
@@ -186,6 +200,7 @@ class SearchViewModel(
                     newsRepository = app.container.newsRepository,
                     recentSearchesRepository = app.container.recentSearchesRepository,
                     userPreferencesRepository = app.container.userPreferencesRepository,
+                    apiKeyRepository = app.container.apiKeyRepository,
                     analytics = app.container.analyticsTracker,
                     savedStateHandle = createSavedStateHandle(),
                 )

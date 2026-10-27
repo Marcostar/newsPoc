@@ -19,6 +19,8 @@ data class TodayUiState(
     val updatedAt: Instant? = null,
     val loadMore: LoadMoreState = LoadMoreState.Idle,
     val isOffline: Boolean = false,
+    // The reader pasted their own key on the developer screen; a 401 then means that key.
+    val usingOwnKey: Boolean = false,
 )
 
 sealed interface FeedStatus {

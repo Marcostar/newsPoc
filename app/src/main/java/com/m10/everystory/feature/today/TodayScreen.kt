@@ -1,6 +1,9 @@
 package com.m10.everystory.feature.today
 
+import android.os.SystemClock
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -25,10 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -39,6 +44,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.m10.everystory.R
+import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.designsystem.component.EsAaButton
 import com.m10.everystory.core.designsystem.component.EsLogoLockup
 import com.m10.everystory.core.designsystem.component.EsMessage
@@ -66,6 +72,7 @@ import com.m10.everystory.domain.model.ArticleSource
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.feature.today.component.LanguageButton
 import com.m10.everystory.feature.today.component.LanguageSheet
+import com.m10.everystory.feature.today.component.OwnKeyRejectedNotice
 import java.time.Duration
 import java.time.Instant
 
@@ -86,6 +93,7 @@ fun TodayRoute(
     onSearchClick: () -> Unit,
     onAaClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
+    onLogoTripleTap: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -100,8 +108,10 @@ fun TodayRoute(
         onAaClick = onAaClick,
         onLanguageClick = { showLanguageSheet = true },
         onArticleClick = onArticleClick,
+        onLogoTripleTap = onLogoTripleTap,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
+        onUseBuiltInKey = viewModel::onUseBuiltInKey,
         onLoadMore = viewModel::onLoadMore,
         onRetryLoadMore = viewModel::onRetryLoadMore,
         onCategorySelected = viewModel::onCategorySelected,
@@ -124,8 +134,10 @@ fun TodayScreen(
     onAaClick: () -> Unit,
     onLanguageClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
+    onLogoTripleTap: () -> Unit,
     onRefresh: () -> Unit,
     onRetry: () -> Unit,
+    onUseBuiltInKey: () -> Unit,
     onLoadMore: () -> Unit,
     onRetryLoadMore: () -> Unit,
     onCategorySelected: (NewsCategory?) -> Unit,
@@ -141,7 +153,11 @@ fun TodayScreen(
                 .heightIn(min = EsSize.minTarget)
                 .padding(start = EsSpace.screen, end = EsSpace.s8, top = EsSpace.s4),
         ) {
-            EsLogoLockup(modifier = Modifier.weight(1f))
+            // Keyed once, so a recomposition between taps doesn't reset the count.
+            val currentOnLogoTripleTap by rememberUpdatedState(onLogoTripleTap)
+            Box(modifier = Modifier.weight(1f)) {
+                EsLogoLockup(modifier = Modifier.onTripleTap { currentOnLogoTripleTap() })
+            }
             LanguageButton(
                 language = uiState.newsLanguage,
                 onClick = onLanguageClick,
@@ -178,10 +194,19 @@ fun TodayScreen(
                         modifier = Modifier.tourTarget(tourTargets, TourStep.Topics),
                     )
                 }
+                if (uiState.ownKeyRefreshRejected()) {
+                    item(key = "own-key") {
+                        OwnKeyRejectedNotice(
+                            onUseBuiltInKey = onUseBuiltInKey,
+                            modifier = Modifier.padding(start = EsSpace.screen, end = EsSpace.screen, bottom = EsSpace.s16),
+                        )
+                    }
+                }
                 feedItems(
                     uiState = uiState,
                     onArticleClick = onArticleClick,
                     onRetry = onRetry,
+                    onUseBuiltInKey = onUseBuiltInKey,
                     onRetryLoadMore = onRetryLoadMore,
                     onCategorySelected = onCategorySelected,
                     leadModifier = Modifier.tourTarget(tourTargets, TourStep.LeadStory),
@@ -195,6 +220,7 @@ private fun LazyListScope.feedItems(
     uiState: TodayUiState,
     onArticleClick: (Article) -> Unit,
     onRetry: () -> Unit,
+    onUseBuiltInKey: () -> Unit,
     onRetryLoadMore: () -> Unit,
     onCategorySelected: (NewsCategory?) -> Unit,
     leadModifier: Modifier,
@@ -205,12 +231,14 @@ private fun LazyListScope.feedItems(
 
         is FeedStatus.Failed -> item(key = "error") {
             val message = status.error.toErrorMessage()
+            // Retrying a rejected key of the reader's own would only fail again.
+            val ownKeyRejected = status.error == AppError.Unauthorized && uiState.usingOwnKey
             EsMessage(
                 icon = message.icon,
                 title = stringResource(message.title),
-                body = stringResource(message.body),
-                actionLabel = stringResource(R.string.try_again),
-                onAction = onRetry,
+                body = stringResource(if (ownKeyRejected) R.string.error_own_key_body else message.body),
+                actionLabel = stringResource(if (ownKeyRejected) R.string.use_builtin_key else R.string.try_again),
+                onAction = if (ownKeyRejected) onUseBuiltInKey else onRetry,
                 modifier = itemModifier.animateStoryItem(this),
             )
         }
@@ -254,6 +282,27 @@ private fun LazyListScope.feedItems(
     }
 }
 
+
+// Stories from earlier are still showing, but the reader's own key was just turned down.
+private fun TodayUiState.ownKeyRefreshRejected(): Boolean =
+    usingOwnKey && (lastRefresh as? RefreshOutcome.Failed)?.error == AppError.Unauthorized
+
+// The developer settings easter egg (handoff): three taps on the name within 700ms of each other.
+private const val TRIPLE_TAP_WINDOW_MS = 700L
+
+private fun Modifier.onTripleTap(onTripleTap: () -> Unit): Modifier = pointerInput(Unit) {
+    var taps = 0
+    var lastTapAt = 0L
+    detectTapGestures {
+        val now = SystemClock.uptimeMillis()
+        taps = if (now - lastTapAt < TRIPLE_TAP_WINDOW_MS) taps + 1 else 1
+        lastTapAt = now
+        if (taps == 3) {
+            taps = 0
+            onTripleTap()
+        }
+    }
+}
 
 @Composable
 private fun TodayHeading(uiState: TodayUiState, onRefresh: () -> Unit) {
@@ -371,8 +420,10 @@ private fun TodayScreenPreview() {
             onAaClick = {},
             onLanguageClick = {},
             onArticleClick = {},
+            onLogoTripleTap = {},
             onRefresh = {},
             onRetry = {},
+            onUseBuiltInKey = {},
             onLoadMore = {},
             onRetryLoadMore = {},
             onCategorySelected = {},

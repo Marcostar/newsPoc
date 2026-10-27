@@ -160,6 +160,24 @@ class DefaultNewsRepositoryTest {
     }
 
     @Test
+    fun `checking a key sends that key and asks for a single story`() = runTest {
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        assertEquals(AppResult.Success(Unit), repository.checkApiKey("0123456789abcdef0123456789abcdef"))
+
+        val request = server.takeRequest()
+        assertEquals("0123456789abcdef0123456789abcdef", request.getHeader("X-Api-Key"))
+        assertEquals("1", request.requestUrl?.queryParameter("pageSize"))
+    }
+
+    @Test
+    fun `a rejected key maps to Unauthorized`() = runTest {
+        server.enqueue(errorResponse(401, "apiKeyInvalid"))
+
+        assertEquals(AppResult.Failure(AppError.Unauthorized), repository.checkApiKey("0123456789abcdef0123456789abcdef"))
+    }
+
+    @Test
     fun `invalid api key maps to Unauthorized`() = runTest {
         server.enqueue(errorResponse(401, "apiKeyInvalid"))
 

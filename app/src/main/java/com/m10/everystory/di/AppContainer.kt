@@ -23,6 +23,8 @@ import com.m10.everystory.core.network.API_KEY_HEADER
 import com.m10.everystory.core.network.ApiKeyInterceptor
 import com.m10.everystory.core.network.ConnectivityManagerNetworkMonitor
 import com.m10.everystory.core.network.NetworkMonitor
+import com.m10.everystory.data.apikey.KeystoreApiKeyRepository
+import com.m10.everystory.data.apikey.KeystoreCipher
 import com.m10.everystory.data.news.DefaultNewsRepository
 import com.m10.everystory.data.news.remote.NewsApiService
 import com.m10.everystory.data.preferences.DataStoreUserPreferencesRepository
@@ -33,6 +35,7 @@ import com.m10.everystory.data.usage.CountingInterceptor
 import com.m10.everystory.data.usage.TrafficCounter
 import com.m10.everystory.data.usage.currentNetworkKind
 import com.m10.everystory.domain.model.TrafficCategory
+import com.m10.everystory.domain.repository.ApiKeyRepository
 import com.m10.everystory.domain.repository.DataUsageRepository
 import com.m10.everystory.domain.repository.NewsRepository
 import com.m10.everystory.domain.repository.RecentSearchesRepository
@@ -56,6 +59,8 @@ private const val READ_TIMEOUT_SECONDS = 15L
 private const val PREFERENCES_FILE = "user_prefs"
 private const val DATABASE_FILE = "everystory.db"
 private const val DATA_USAGE_FILE = "data_usage"
+private const val API_KEY_FILE = "own_api_key" // left out of backups, see data_extraction_rules.xml
+private const val API_KEY_ALIAS = "everystory_api_key"
 
 // Manual DI: everything the app shares is created here once, and ViewModel
 // factories pull what they need from it.
@@ -68,6 +73,7 @@ interface AppContainer {
     val adConsent: AdConsent
     val dataUsageRepository: DataUsageRepository
     val networkMonitor: NetworkMonitor
+    val apiKeyRepository: ApiKeyRepository
 
     // Coil's image downloads go through this client so their bytes are counted too.
     val imageHttpClient: OkHttpClient
@@ -107,7 +113,7 @@ class DefaultAppContainer(
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(ApiKeyInterceptor(BuildConfig.NEWS_API_KEY))
+            .addInterceptor(ApiKeyInterceptor { apiKeyRepository.currentOwnKey() ?: BuildConfig.NEWS_API_KEY })
             .addNetworkInterceptor(countingInterceptor(TrafficCategory.Stories))
             .apply { if (BuildConfig.DEBUG) addInterceptor(loggingInterceptor()) }
             .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -125,6 +131,13 @@ class DefaultAppContainer(
 
     private val database: EveryStoryDatabase by lazy {
         Room.databaseBuilder(context, EveryStoryDatabase::class.java, DATABASE_FILE).build()
+    }
+
+    override val apiKeyRepository: ApiKeyRepository by lazy {
+        KeystoreApiKeyRepository(
+            preferences = context.getSharedPreferences(API_KEY_FILE, Context.MODE_PRIVATE),
+            cipher = KeystoreCipher(API_KEY_ALIAS),
+        )
     }
 
     override val networkMonitor: NetworkMonitor by lazy {

@@ -144,6 +144,11 @@ class DefaultNewsRepository(
         api.sources(category = category?.apiValue, language = language.code).sources.map { it.toDomain() }
     }
 
+    override suspend fun checkApiKey(key: String): AppResult<Unit> = safeApiCall {
+        api.checkKey(apiKey = key, language = NewsLanguage.English.code)
+        Unit
+    }
+
     override suspend fun article(key: String): Article? = withContext(ioDispatcher) {
         articleDao.getByKey(key)?.toDomain()
     }

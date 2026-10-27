@@ -13,6 +13,7 @@ data class SearchUiState(
     val articles: List<Article> = emptyList(),
     val totalResults: Int = 0,
     val loadMore: LoadMoreState = LoadMoreState.Idle,
+    val usingOwnKey: Boolean = false,
 )
 
 sealed interface SearchResults {
