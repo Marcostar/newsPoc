@@ -95,8 +95,10 @@ private fun BannerView(
     val currentOnClick by rememberUpdatedState(onClick)
     val currentOnFailed by rememberUpdatedState(onFailed)
 
+    // Application context: the ads SDK keeps references to the view's context after destroy()
+    // (seen in LeakCanary, OMID session → ad WebView → MainActivity), so don't hand it the Activity.
     val adView = remember(widthDp) {
-        AdView(context).apply {
+        AdView(context.applicationContext).apply {
             setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, widthDp))
             adUnitId = BANNER_AD_UNIT_ID
             adListener = object : AdListener() {
@@ -111,12 +113,13 @@ private fun BannerView(
         }
     }
     // The ad SDK keeps timers and a WebView running; pause them in the background, free them on exit.
+    // Effects are disposed in reverse order, so destroy() is declared first to run after pause().
+    DisposableEffect(adView) {
+        onDispose { adView.destroy() }
+    }
     LifecycleResumeEffect(adView) {
         adView.resume()
         onPauseOrDispose { adView.pause() }
-    }
-    DisposableEffect(adView) {
-        onDispose { adView.destroy() }
     }
     AndroidView(factory = { adView })
 }
