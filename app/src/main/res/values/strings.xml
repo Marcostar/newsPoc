@@ -209,7 +209,7 @@
 
     <!-- News language -->
     <string name="language_title">News language</string>
-    <string name="language_note">Menus stay in your phone\'s language.</string>
+    <string name="language_note">Menus stay in English.</string>
     <string name="language_close_description">Close news language</string>
     <string name="language_button_description">News language: %1$s</string>
     <string name="language_detail_rtl">%1$s · right to left</string>
@@ -274,7 +274,7 @@
     <string name="tour_text_size_title">Make the text comfortable</string>
     <string name="tour_text_size_text">Aa changes the text size and theme, like a reading app. It works on every screen.</string>
     <string name="tour_language_title">Read news in another language</string>
-    <string name="tour_language_text">Switch the news to German, French or Arabic. Menus stay in your phone\'s language.</string>
+    <string name="tour_language_text">Switch the news to German, French or Arabic. Menus stay in English.</string>
     <string name="tour_topics_title">Pick a topic</string>
     <string name="tour_topics_text">Narrow Today to business, health, science, sports, tech or entertainment.</string>
     <string name="tour_story_title">Open a story</string>
