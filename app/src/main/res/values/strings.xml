@@ -1,4 +1,15 @@
 <resources>
     <string name="app_name">EveryStory</string>
     <string name="tagline">The news, and the people in it.</string>
+
+    <string name="nav_today">Today</string>
+    <string name="nav_saved">Saved</string>
+    <string name="nav_you">You</string>
+
+    <string name="today_title">Today</string>
+    <string name="search_hint">Search stories, places, people</string>
+    <string name="saved_title">Saved</string>
+    <string name="you_title">You</string>
+    <string name="search_title">Search</string>
+    <string name="story_title">Story</string>
 </resources>

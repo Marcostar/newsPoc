@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.Mail
+import androidx.compose.material.icons.rounded.Newspaper
 import androidx.compose.material.icons.rounded.Notifications
 import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.NotificationsOff
@@ -34,7 +35,6 @@ import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarOutline
 import androidx.compose.material.icons.rounded.Stop
-import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material.icons.rounded.Tour
 import androidx.compose.material.icons.rounded.Translate
 import androidx.compose.material.icons.rounded.Wifi
@@ -58,7 +58,7 @@ object EsIcons {
     val Save = Icons.Rounded.BookmarkBorder
     val Saved = Icons.Rounded.Bookmark
     val SavedTab = Icons.Rounded.Bookmarks
-    val Today = Icons.Rounded.Today
+    val Today = Icons.Rounded.Newspaper
     val You = Icons.Rounded.Person
     val Listen = Icons.Rounded.Headphones
     val Stop = Icons.Rounded.Stop
