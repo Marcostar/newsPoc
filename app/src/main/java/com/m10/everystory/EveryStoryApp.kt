@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -33,6 +35,7 @@ import com.m10.everystory.core.designsystem.component.EsLaunchScreen
 import com.m10.everystory.core.designsystem.component.EsNavBar
 import com.m10.everystory.core.designsystem.component.EsNavItem
 import com.m10.everystory.core.designsystem.theme.EsMotion
+import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.ui.ConnectivityStatus
 import com.m10.everystory.core.ui.LocalReducedMotion
 import com.m10.everystory.core.ui.LocalTourTargets
@@ -150,18 +153,27 @@ fun EveryStoryApp(
                     }
                 },
             ) { innerPadding ->
-                EsNavHost(
-                    navController = navController,
-                    todayViewModel = todayViewModel,
-                    isTourRunning = tourStep != null,
-                    onStartTour = tourViewModel::onStart,
-                    onOpenDisplaySettings = { showDisplaySettings = true },
-                    openSavedOnStart = openSavedOnStart,
+                // Long lines are hard to read, so on landscape phones and tablets the screens stay
+                // 600dp wide and centred.
+                Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                         .consumeWindowInsets(innerPadding),
-                )
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    EsNavHost(
+                        navController = navController,
+                        todayViewModel = todayViewModel,
+                        isTourRunning = tourStep != null,
+                        onStartTour = tourViewModel::onStart,
+                        onOpenDisplaySettings = { showDisplaySettings = true },
+                        openSavedOnStart = openSavedOnStart,
+                        modifier = Modifier
+                            .widthIn(max = EsSize.contentMaxWidth)
+                            .fillMaxSize(),
+                    )
+                }
             }
 
             if (showDisplaySettings) {

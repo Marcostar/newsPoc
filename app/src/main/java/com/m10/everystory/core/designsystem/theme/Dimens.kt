@@ -53,6 +53,7 @@ object EsSize {
     val playerProgress = 4.dp
     val profileAvatar = 96.dp
     val confettiPiece = 8.dp
+    val contentMaxWidth = 600.dp
 }
 
 object EsRadius {
