@@ -50,6 +50,10 @@ import com.m10.everystory.navigation.TopLevelDestination
 import com.m10.everystory.navigation.analyticsScreen
 import com.m10.everystory.navigation.navigateToTopLevel
 import com.m10.everystory.navigation.topLevelDestination
+import kotlinx.coroutines.delay
+
+// Long enough to read the name and tagline on a cold start, short enough not to feel like a wait.
+private const val MIN_LAUNCH_SCREEN_MS = 1_600L
 
 @Composable
 fun EveryStoryApp(
@@ -78,11 +82,20 @@ fun EveryStoryApp(
     val todayViewModel: TodayViewModel = viewModel(factory = TodayViewModel.Factory)
     val todayState by todayViewModel.uiState.collectAsStateWithLifecycle()
 
+    // The cached feed is ready almost at once, so without a floor the logo and tagline would flash
+    // past unread. Saveable, so rotating or switching theme doesn't play it again.
+    var launchFloorPassed by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(MIN_LAUNCH_SCREEN_MS)
+        launchFloorPassed = true
+    }
+    val showLaunchScreen = todayState.isLaunching || !launchFloorPassed
+
     val tourViewModel: TourViewModel = viewModel(factory = TourViewModel.Factory)
     val tourState by tourViewModel.uiState.collectAsStateWithLifecycle()
     val tourTargets = remember { TourTargets() }
     // Waits for the launch screen, so the first tip lands on a real feed.
-    val tourStep = tourState.step.takeUnless { todayState.isLaunching }
+    val tourStep = tourState.step.takeUnless { showLaunchScreen }
 
     // Opened from Today, Story and You, so it lives here rather than on any one screen.
     var showDisplaySettings by rememberSaveable { mutableStateOf(false) }
@@ -166,7 +179,7 @@ fun EveryStoryApp(
             }
 
             AnimatedVisibility(
-                visible = todayState.isLaunching,
+                visible = showLaunchScreen,
                 enter = EnterTransition.None,
                 exit = fadeOut(tween(EsMotion.ENTER_EXIT_MS)),
             ) {
