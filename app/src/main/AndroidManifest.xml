@@ -34,9 +34,12 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" />
 
+        <!-- singleTop: opened from the reminder and then from the launcher icon, Android would
+             otherwise stack a second copy of the app on top of the first. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.EveryStory.Starting"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
