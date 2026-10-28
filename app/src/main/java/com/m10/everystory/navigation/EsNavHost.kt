@@ -89,13 +89,22 @@ fun EsNavHost(
                         onOpenDisplaySettings = onOpenDisplaySettings,
                         onOpenDataUsage = { navController.navigate(DataUsageDestination) },
                         onOpenProfile = { navController.navigate(ProfileDestination) { launchSingleTop = true } },
+                        onOpenDeveloperSettings = { navController.navigate(DeveloperDestination) { launchSingleTop = true } },
                     )
                 }
                 composable<ProfileDestination> {
                     ProfileRoute(onBack = { navController.popBackStack() })
                 }
                 composable<DeveloperDestination> {
+                    // Opened from Today's logo, Today's or Search's "Use your own key", or You › Help.
+                    val previous = navController.previousBackStackEntry?.destination
+                    val backLabel = when {
+                        previous?.hasRoute<SearchDestination>() == true -> R.string.nav_search
+                        previous?.hasRoute<YouDestination>() == true -> R.string.nav_you
+                        else -> R.string.nav_today
+                    }
                     DeveloperSettingsRoute(
+                        backLabel = stringResource(backLabel),
                         onBack = { navController.popBackStack() },
                         // Pop rather than navigateToTopLevel(Today): that would save this screen as
                         // Today's tab state and restore it straight back.

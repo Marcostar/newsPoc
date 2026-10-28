@@ -70,6 +70,7 @@ import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
 
 @Composable
 fun DeveloperSettingsRoute(
+    backLabel: String,
     onBack: () -> Unit,
     onClose: () -> Unit,
     viewModel: DeveloperSettingsViewModel = viewModel(factory = DeveloperSettingsViewModel.Factory),
@@ -78,6 +79,7 @@ fun DeveloperSettingsRoute(
     DeveloperSettingsScreen(
         uiState = uiState,
         baseUrl = BuildConfig.NEWS_BASE_URL,
+        backLabel = backLabel,
         onBack = onBack,
         onClose = onClose,
         onInputChange = viewModel::onInputChange,
@@ -91,6 +93,7 @@ fun DeveloperSettingsRoute(
 fun DeveloperSettingsScreen(
     uiState: DeveloperSettingsUiState,
     baseUrl: String,
+    backLabel: String,
     onBack: () -> Unit,
     onClose: () -> Unit,
     onInputChange: (String) -> Unit,
@@ -110,7 +113,7 @@ fun DeveloperSettingsScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
-            DeveloperTopBar(onBack = onBack, onClose = onClose)
+            DeveloperTopBar(backLabel = backLabel, onBack = onBack, onClose = onClose)
             Column(
                 verticalArrangement = Arrangement.spacedBy(EsSpace.s16),
                 modifier = Modifier
@@ -169,10 +172,10 @@ fun DeveloperSettingsScreen(
     }
 }
 
-// Same pair as You: a labelled way back, and Close to Today.
+// Same pair as You: a labelled way back (to wherever it was opened from), and Close to Today.
 @Composable
-private fun DeveloperTopBar(onBack: () -> Unit, onClose: () -> Unit) {
-    val backDescription = stringResource(R.string.back_to, stringResource(R.string.nav_today))
+private fun DeveloperTopBar(backLabel: String, onBack: () -> Unit, onClose: () -> Unit) {
+    val backDescription = stringResource(R.string.back_to, backLabel)
     val closeDescription = stringResource(R.string.close_to_today)
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -188,7 +191,7 @@ private fun DeveloperTopBar(onBack: () -> Unit, onClose: () -> Unit) {
         ) {
             Icon(EsIcons.Back, contentDescription = null)
             Text(
-                text = stringResource(R.string.nav_today),
+                text = backLabel,
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(start = EsSpace.s8),
             )
@@ -416,6 +419,7 @@ private fun DeveloperSettingsPreview() {
         DeveloperSettingsScreen(
             uiState = DeveloperSettingsUiState(input = "not-a-key", inputError = KeyInputError.WrongFormat),
             baseUrl = "https://newsapi.org/v2/",
+            backLabel = "Today",
             onBack = {},
             onClose = {},
             onInputChange = {},
@@ -433,6 +437,7 @@ private fun DeveloperSettingsNightPreview() {
         DeveloperSettingsScreen(
             uiState = DeveloperSettingsUiState(ownKeyEnding = "1a2b", isChecking = true),
             baseUrl = "https://newsapi.org/v2/",
+            backLabel = "Today",
             onBack = {},
             onClose = {},
             onInputChange = {},
@@ -450,6 +455,7 @@ private fun DeveloperSettingsLargeTextPreview() {
         DeveloperSettingsScreen(
             uiState = DeveloperSettingsUiState(),
             baseUrl = "https://newsapi.org/v2/",
+            backLabel = "Today",
             onBack = {},
             onClose = {},
             onInputChange = {},

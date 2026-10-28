@@ -24,7 +24,13 @@
     <string name="theme_dark">Dark</string>
     <string name="theme_system">System</string>
     <string name="you_about">About</string>
+    <string name="you_own_key">Use your own NewsAPI key</string>
+    <string name="you_own_key_detail">For when the free news runs out</string>
     <string name="you_version">Version %1$s (build %2$d)</string>
+    <plurals name="you_version_taps_left">
+        <item quantity="one">%1$s · %2$d more tap</item>
+        <item quantity="other">%1$s · %2$d more taps</item>
+    </plurals>
 
     <!-- Profile page: the easter egg behind the version row. Fill in the details; an empty link hides its tile. -->
     <string name="profile_eyebrow">You found the maker</string>
@@ -316,7 +322,7 @@
     <string name="developer_requests_headlines">GET %1$stop-headlines?language=en&amp;pageSize=20&amp;page=1</string>
     <string name="developer_requests_search">GET %1$severything?q=…&amp;language=en</string>
     <string name="developer_requests_note">The free developer plan allows 100 requests a day and 100 results per search.</string>
-    <string name="developer_footer">Found by tapping the EveryStory name three times, or offered when the free news requests run out.</string>
+    <string name="developer_footer">Also under You › Help, or found by tapping the EveryStory name three times.</string>
     <string name="developer_snackbar_saved">Key works. Stories now load with your key.</string>
     <string name="developer_snackbar_removed">Back to the built-in key.</string>
 </resources>
