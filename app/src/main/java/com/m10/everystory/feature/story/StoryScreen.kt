@@ -3,6 +3,7 @@ package com.m10.everystory.feature.story
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.tween
@@ -107,8 +108,12 @@ fun StoryRoute(
     val readAloud by readAloudViewModel.uiState.collectAsStateWithLifecycle()
 
     // No background playback (that needs a media service), so leaving the screen pauses the voice;
-    // leaving the story for good stops it when the ViewModel is cleared.
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { readAloudViewModel.onPause() }
+    // leaving the story for good stops it when the ViewModel is cleared. Rotation stops the activity
+    // too, but the reader hasn't gone anywhere, so the voice carries on.
+    val activity = LocalActivity.current
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (activity?.isChangingConfigurations != true) readAloudViewModel.onPause()
+    }
     val context = LocalContext.current
     val toolbarColor = MaterialTheme.colorScheme.primary.toArgb()
 
