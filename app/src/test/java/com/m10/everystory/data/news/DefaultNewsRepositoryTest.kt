@@ -160,6 +160,24 @@ class DefaultNewsRepositoryTest {
     }
 
     @Test
+    fun `stray brackets are dropped before searching`() = runTest {
+        server.enqueue(MockResponse().setBody(HEADLINES_JSON))
+
+        repository.searchArticles(query = "(climate", page = 1)
+
+        assertEquals("climate", server.takeRequest().requestUrl?.queryParameter("q"))
+    }
+
+    @Test
+    fun `a query of only stray brackets finds nothing without a request`() = runTest {
+        val page = repository.searchArticles(query = "((", page = 1).successValue()
+
+        assertTrue(page.articles.isEmpty())
+        assertTrue(page.isLastPage)
+        assertEquals(0, server.requestCount)
+    }
+
+    @Test
     fun `checking a key sends that key and asks for a single story`() = runTest {
         server.enqueue(MockResponse().setBody(HEADLINES_JSON))
 
