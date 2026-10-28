@@ -42,6 +42,22 @@ class ArticleMapperTest {
     }
 
     @Test
+    fun `html in a summary becomes plain text`() {
+        assertEquals(
+            "Talks in Tehran aim to stop the war DW.com",
+            "<ol><li><a href=\"https://news.google.com/x\">Talks in Tehran aim to stop the war</a>&nbsp;&nbsp;<font color=\"#6f6f6f\">DW.com</font></li></ol>"
+                .withoutHtml(),
+        )
+        assertEquals("Q&A: rates, \"cuts\" & <tags>", "Q&amp;A: rates, &quot;cuts&quot; &amp; &lt;tags&gt;".withoutHtml())
+        assertEquals("A plain summary", dto.copy(description = "  A plain summary ").toDomain()?.description)
+    }
+
+    @Test
+    fun `a title that is only the source name is dropped`() {
+        assertNull(dto.copy(source = ArticleSourceDto(id = null, name = "Google News (Saudi Arabia)"), title = "Google News").toDomain())
+    }
+
+    @Test
     fun `articles missing a url, title or date are dropped`() {
         assertNull(dto.copy(url = null).toDomain())
         assertNull(dto.copy(title = "[Removed]").toDomain())
