@@ -57,6 +57,8 @@ import com.m10.everystory.core.designsystem.theme.EsTheme
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
 import com.m10.everystory.core.ui.LoadMoreWhenNearEnd
 import com.m10.everystory.core.ui.searchTerms
+import com.m10.everystory.core.ui.ErrorAction
+import com.m10.everystory.core.ui.labelRes
 import com.m10.everystory.core.ui.toErrorMessage
 import com.m10.everystory.domain.model.Article
 import com.m10.everystory.domain.repository.MAX_RESULTS
@@ -66,6 +68,7 @@ import java.text.NumberFormat
 fun SearchRoute(
     onBack: () -> Unit,
     onArticleClick: (Article) -> Unit,
+    onUseOwnKey: () -> Unit,
     viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -84,6 +87,7 @@ fun SearchRoute(
         onUseBuiltInKey = viewModel::onUseBuiltInKey,
         onLoadMore = viewModel::onLoadMore,
         onRetryLoadMore = viewModel::onRetryLoadMore,
+        onUseOwnKey = onUseOwnKey,
     )
 }
 
@@ -101,8 +105,17 @@ fun SearchScreen(
     onLoadMore: () -> Unit,
     onRetryLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
+    onUseOwnKey: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
+    // Every error offers one action; this is where each kind goes.
+    val onErrorAction: (ErrorAction) -> Unit = { action ->
+        when (action) {
+            ErrorAction.TryAgain -> onRetry()
+            ErrorAction.UseBuiltInKey -> onUseBuiltInKey()
+            ErrorAction.UseOwnKey -> onUseOwnKey()
+        }
+    }
     LoadMoreWhenNearEnd(listState, onLoadMore)
 
     Column(
@@ -122,7 +135,7 @@ fun SearchScreen(
             contentPadding = PaddingValues(bottom = EsSpace.s48),
             modifier = Modifier.fillMaxSize(),
         ) {
-            searchContent(uiState, onRecentSearchClick, onArticleClick, onRetry, onUseBuiltInKey, onRetryLoadMore)
+            searchContent(uiState, onRecentSearchClick, onArticleClick, onErrorAction, onRetryLoadMore)
         }
     }
 }
@@ -182,8 +195,7 @@ private fun LazyListScope.searchContent(
     uiState: SearchUiState,
     onRecentSearchClick: (String) -> Unit,
     onArticleClick: (Article) -> Unit,
-    onRetry: () -> Unit,
-    onUseBuiltInKey: () -> Unit,
+    onErrorAction: (ErrorAction) -> Unit,
     onRetryLoadMore: () -> Unit,
 ) {
     val itemModifier = Modifier.padding(horizontal = EsSpace.screen)
@@ -195,15 +207,13 @@ private fun LazyListScope.searchContent(
         }
 
         is SearchResults.Failed -> item(key = "error") {
-            val message = results.error.toErrorMessage()
-            // Retrying a rejected key of the reader's own would only fail again.
-            val ownKeyRejected = results.error == AppError.Unauthorized && uiState.usingOwnKey
+            val message = results.error.toErrorMessage(uiState.usingOwnKey)
             EsMessage(
                 icon = message.icon,
                 title = stringResource(message.title),
-                body = stringResource(if (ownKeyRejected) R.string.error_own_key_body else message.body),
-                actionLabel = stringResource(if (ownKeyRejected) R.string.use_builtin_key else R.string.try_again),
-                onAction = if (ownKeyRejected) onUseBuiltInKey else onRetry,
+                body = stringResource(message.body),
+                actionLabel = stringResource(message.action.labelRes()),
+                onAction = { onErrorAction(message.action) },
                 modifier = itemModifier.animateStoryItem(this),
             )
         }

@@ -248,4 +248,21 @@ class SearchViewModelTest {
         assertEquals(SearchResults.Loaded, state.results)
         assertEquals(listOf("levee" to 1, "levee" to 1), news.searchRequests)
     }
+
+    @Test
+    fun `adding an own key after the free requests ran out runs the search again`() = runTest {
+        news.searchResults += AppResult.Failure(AppError.RateLimited)
+        news.searchResults += testPage(1, listOf("a"))
+        val viewModel = createViewModel()
+        viewModel.onQueryChange("levee")
+        viewModel.onSubmit()
+        advanceUntilIdle()
+        assertEquals(SearchResults.Failed(AppError.RateLimited), viewModel.uiState.value.results)
+
+        keys.saveOwnKey("0123456789abcdef0123456789abcdef")
+        advanceUntilIdle()
+
+        assertEquals(SearchResults.Loaded, viewModel.uiState.value.results)
+        assertEquals(listOf("levee" to 1, "levee" to 1), news.searchRequests)
+    }
 }

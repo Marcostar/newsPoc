@@ -11,6 +11,7 @@ import com.m10.everystory.EveryStoryApplication
 import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.analytics.AnalyticsTracker
+import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.ui.LoadMoreState
 import com.m10.everystory.domain.model.NewsLanguage
@@ -57,7 +58,12 @@ class SearchViewModel(
             }
         }
         viewModelScope.launch {
-            apiKeyRepository.ownKey.collect { key -> _uiState.update { it.copy(usingOwnKey = key != null) } }
+            apiKeyRepository.ownKey.collect { key ->
+                val keyJustAdded = key != null && !_uiState.value.usingOwnKey
+                _uiState.update { it.copy(usingOwnKey = key != null) }
+                // Back from adding a key after the free requests ran out: run the search once with it.
+                if (keyJustAdded && (_uiState.value.results as? SearchResults.Failed)?.error == AppError.RateLimited) onRetry()
+            }
         }
         // Coming back after process death: run the query that was on screen.
         _uiState.value.query.trim().takeIf { it.length >= MIN_QUERY_LENGTH }?.let(::searchNow)

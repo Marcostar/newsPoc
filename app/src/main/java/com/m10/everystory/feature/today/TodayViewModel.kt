@@ -9,6 +9,7 @@ import com.m10.everystory.EveryStoryApplication
 import com.m10.everystory.core.analytics.AnalyticsEvent
 import com.m10.everystory.core.analytics.AnalyticsScreen
 import com.m10.everystory.core.analytics.AnalyticsTracker
+import com.m10.everystory.core.common.AppError
 import com.m10.everystory.core.common.AppResult
 import com.m10.everystory.core.network.NetworkMonitor
 import com.m10.everystory.core.ui.LoadMoreState
@@ -70,7 +71,13 @@ class TodayViewModel(
             networkMonitor.isOnline.collect { online -> _uiState.update { it.copy(isOffline = !online) } }
         }
         viewModelScope.launch {
-            apiKeyRepository.ownKey.collect { key -> _uiState.update { it.copy(usingOwnKey = key != null) } }
+            apiKeyRepository.ownKey.collect { key ->
+                val keyJustAdded = key != null && !_uiState.value.usingOwnKey
+                _uiState.update { it.copy(usingOwnKey = key != null) }
+                // Back from adding a key after the free requests ran out: try once with it. Only on
+                // this change, so it can't loop.
+                if (keyJustAdded) retryIfRateLimited()
+            }
         }
     }
 
@@ -101,9 +108,21 @@ class TodayViewModel(
     }
 
     fun onRefresh() {
-        val state = _uiState.value
-        if (state.isRefreshing) return
+        if (_uiState.value.isRefreshing) return
         analytics.log(AnalyticsEvent.FeedRefresh)
+        refresh()
+    }
+
+    private fun retryIfRateLimited() {
+        val state = _uiState.value
+        when {
+            (state.feedStatus as? FeedStatus.Failed)?.error == AppError.RateLimited -> onRetry()
+            (state.lastRefresh as? RefreshOutcome.Failed)?.error == AppError.RateLimited -> refresh()
+        }
+    }
+
+    private fun refresh() {
+        val state = _uiState.value
         if (state.articles.isEmpty()) return onRetry()
 
         cancelLoading()

@@ -144,6 +144,7 @@
     </plurals>
     <string name="status_no_new_stories">Updated %1$s · No new stories</string>
     <string name="status_refresh_failed">Couldn’t refresh. Still showing %1$s.</string>
+    <string name="status_refresh_rate_limited">Free news used up. Still showing %1$s.</string>
     <string name="status_offline">Offline · last updated %1$s</string>
     <string name="refresh">Refresh</string>
     <string name="refreshing">Refreshing…</string>
@@ -183,11 +184,14 @@
     <string name="error_unauthorized_body">The news service didn’t accept this app’s key.</string>
     <string name="error_own_key_body">The news service didn’t accept your own NewsAPI key.</string>
     <string name="own_key_refresh_failed">Couldn’t refresh: the news service didn’t accept your own NewsAPI key.</string>
+    <string name="rate_limited_refresh_failed">Couldn’t refresh: the free news requests are used up for now. Add your own free NewsAPI key, or try again later.</string>
     <string name="use_builtin_key">Use the built-in key</string>
+    <string name="use_own_key">Use your own key</string>
     <string name="error_server_body">The news service isn’t responding. This isn’t a problem with your phone.</string>
     <string name="error_timeout_body">The news service is taking too long. Try again in a moment.</string>
-    <string name="error_rate_limited_title">Too many requests</string>
-    <string name="error_rate_limited_body">Try again in a minute.</string>
+    <string name="error_rate_limited_title">Free news used up for now</string>
+    <string name="error_rate_limited_body">EveryStory runs on NewsAPI’s free plan, which allows 50 requests every 12 hours, and they’ve all been used. Add your own free NewsAPI key to keep reading, or try again later.</string>
+    <string name="error_own_key_rate_limited_body">Your own NewsAPI key has used its free requests for now. Try again later.</string>
     <string name="error_unknown_body">Something went wrong on our side. Try again.</string>
 
     <!-- Text and display (Aa) -->
@@ -299,7 +303,7 @@
     <string name="developer_key_wrong_format">That doesn’t look like a NewsAPI key. Keys are 32 letters (a–f) and numbers, with no spaces.</string>
     <string name="developer_key_rejected">NewsAPI didn’t accept this key. Check it on your newsapi.org account page.</string>
     <string name="developer_key_offline">Couldn’t check the key: you’re offline. Connect, then try again.</string>
-    <string name="developer_key_rate_limited">Couldn’t check the key: too many requests. Try again in a minute.</string>
+    <string name="developer_key_rate_limited">Couldn’t check the key: it has used its free requests for now. Try again later, or use another key.</string>
     <string name="developer_key_no_response">Couldn’t check the key: the news service isn’t responding. Try again in a moment.</string>
     <string name="developer_key_show">Show</string>
     <string name="developer_key_hide">Hide</string>
@@ -312,7 +316,7 @@
     <string name="developer_requests_headlines">GET %1$stop-headlines?language=en&amp;pageSize=20&amp;page=1</string>
     <string name="developer_requests_search">GET %1$severything?q=…&amp;language=en</string>
     <string name="developer_requests_note">The free developer plan allows 100 requests a day and 100 results per search.</string>
-    <string name="developer_footer">Found by tapping the EveryStory name three times. Not listed anywhere else.</string>
+    <string name="developer_footer">Found by tapping the EveryStory name three times, or offered when the free news requests run out.</string>
     <string name="developer_snackbar_saved">Key works. Stories now load with your key.</string>
     <string name="developer_snackbar_removed">Back to the built-in key.</string>
 </resources>

@@ -66,6 +66,7 @@ fun EsNavHost(
                             onAaClick = onOpenDisplaySettings,
                             onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
                             onLogoTripleTap = { navController.navigate(DeveloperDestination) { launchSingleTop = true } },
+                            onUseOwnKey = { navController.navigate(DeveloperDestination) { launchSingleTop = true } },
                         )
                     }
                 }
@@ -109,6 +110,7 @@ fun EsNavHost(
                         SearchRoute(
                             onBack = { navController.popBackStack() },
                             onArticleClick = { article -> navController.navigate(StoryDestination(article.key)) },
+                            onUseOwnKey = { navController.navigate(DeveloperDestination) { launchSingleTop = true } },
                         )
                     }
                 }

@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -29,11 +30,15 @@ import com.m10.everystory.core.designsystem.theme.EsSize
 import com.m10.everystory.core.designsystem.theme.EsSpace
 import com.m10.everystory.core.designsystem.theme.EveryStoryTheme
 
-// Shown above stories that are still on screen when a refresh with the reader's own key gets a 401.
-// A problem, so ink outline + icon + sentence, never red.
+// Shown above stories that are still on screen when a refresh failed in a way the reader can fix:
+// their own key was turned down, or the free requests ran out. A problem, so ink outline + icon +
+// sentence, never red.
 @Composable
-fun OwnKeyRejectedNotice(
-    onUseBuiltInKey: () -> Unit,
+fun RefreshProblemNotice(
+    icon: ImageVector,
+    text: String,
+    actionLabel: String,
+    onAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -50,26 +55,26 @@ fun OwnKeyRejectedNotice(
                 modifier = Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
             ) {
                 Icon(
-                    EsIcons.Key,
+                    icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(EsSize.inlineIcon),
                 )
                 Text(
-                    text = stringResource(R.string.own_key_refresh_failed),
+                    text = text,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(end = EsSpace.s8),
                 )
             }
             TextButton(
-                onClick = onUseBuiltInKey,
+                onClick = onAction,
                 modifier = Modifier
                     .padding(start = EsSpace.s24)
                     .heightIn(min = EsSize.minTarget),
             ) {
                 Text(
-                    text = stringResource(R.string.use_builtin_key),
+                    text = actionLabel,
                     style = MaterialTheme.typography.labelLarge,
                     textDecoration = TextDecoration.Underline,
                 )
@@ -78,20 +83,31 @@ fun OwnKeyRejectedNotice(
     }
 }
 
+@Composable
+private fun PreviewNotice() {
+    RefreshProblemNotice(
+        icon = EsIcons.Schedule,
+        text = stringResource(R.string.rate_limited_refresh_failed),
+        actionLabel = stringResource(R.string.use_own_key),
+        onAction = {},
+        modifier = Modifier.padding(EsSpace.s16),
+    )
+}
+
 @Preview(name = "Day", showBackground = true, widthDp = 360)
 @Composable
-private fun OwnKeyRejectedNoticePreview() {
-    EveryStoryTheme { OwnKeyRejectedNotice(onUseBuiltInKey = {}, modifier = Modifier.padding(EsSpace.s16)) }
+private fun RefreshProblemNoticePreview() {
+    EveryStoryTheme { PreviewNotice() }
 }
 
 @Preview(name = "Night", showBackground = true, widthDp = 360)
 @Composable
-private fun OwnKeyRejectedNoticeNightPreview() {
-    EveryStoryTheme(darkTheme = true) { OwnKeyRejectedNotice(onUseBuiltInKey = {}, modifier = Modifier.padding(EsSpace.s16)) }
+private fun RefreshProblemNoticeNightPreview() {
+    EveryStoryTheme(darkTheme = true) { PreviewNotice() }
 }
 
 @Preview(name = "Large text", showBackground = true, widthDp = 360, fontScale = 2f)
 @Composable
-private fun OwnKeyRejectedNoticeLargePreview() {
-    EveryStoryTheme { OwnKeyRejectedNotice(onUseBuiltInKey = {}, modifier = Modifier.padding(EsSpace.s16)) }
+private fun RefreshProblemNoticeLargePreview() {
+    EveryStoryTheme { PreviewNotice() }
 }

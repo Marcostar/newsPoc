@@ -324,4 +324,35 @@ class TodayViewModelTest {
 
         assertEquals(1, repository.headlineRequests.size)
     }
+
+    @Test
+    fun `adding an own key after the free requests ran out refreshes the stories on screen`() = runTest {
+        repository.headlineResults += testPage(1, listOf("a"))
+        repository.headlineResults += AppResult.Failure(AppError.RateLimited)
+        repository.headlineResults += testPage(1, listOf("b", "a"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+        viewModel.onRefresh()
+        advanceUntilIdle()
+        assertEquals(RefreshOutcome.Failed(AppError.RateLimited), viewModel.uiState.value.lastRefresh)
+
+        keys.saveOwnKey("0123456789abcdef0123456789abcdef")
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(state.usingOwnKey)
+        assertEquals(listOf("b", "a"), state.articles.map { it.key })
+        assertEquals(3, repository.headlineRequests.size)
+    }
+
+    @Test
+    fun `a key that was already saved doesn't trigger an extra load`() = runTest {
+        keys.ownKey.value = "0123456789abcdef0123456789abcdef"
+        repository.headlineResults += AppResult.Failure(AppError.RateLimited)
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(FeedStatus.Failed(AppError.RateLimited), viewModel.uiState.value.feedStatus)
+        assertEquals(1, repository.headlineRequests.size)
+    }
 }

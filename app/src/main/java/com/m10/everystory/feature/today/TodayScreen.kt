@@ -62,6 +62,9 @@ import com.m10.everystory.core.ui.animateStoryItem
 import com.m10.everystory.core.ui.clockTimeText
 import com.m10.everystory.core.ui.onTripleTap
 import com.m10.everystory.core.ui.nativeNameRes
+import com.m10.everystory.core.ui.ErrorAction
+import com.m10.everystory.core.ui.ErrorMessage
+import com.m10.everystory.core.ui.labelRes
 import com.m10.everystory.core.ui.toErrorMessage
 import com.m10.everystory.core.ui.tourTarget
 import com.m10.everystory.domain.model.Article
@@ -69,7 +72,7 @@ import com.m10.everystory.domain.model.ArticleSource
 import com.m10.everystory.domain.model.NewsCategory
 import com.m10.everystory.feature.today.component.LanguageButton
 import com.m10.everystory.feature.today.component.LanguageSheet
-import com.m10.everystory.feature.today.component.OwnKeyRejectedNotice
+import com.m10.everystory.feature.today.component.RefreshProblemNotice
 import java.time.Duration
 import java.time.Instant
 
@@ -91,6 +94,7 @@ fun TodayRoute(
     onAaClick: () -> Unit,
     onArticleClick: (Article) -> Unit,
     onLogoTripleTap: () -> Unit,
+    onUseOwnKey: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
@@ -109,6 +113,7 @@ fun TodayRoute(
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
         onUseBuiltInKey = viewModel::onUseBuiltInKey,
+        onUseOwnKey = onUseOwnKey,
         onLoadMore = viewModel::onLoadMore,
         onRetryLoadMore = viewModel::onRetryLoadMore,
         onCategorySelected = viewModel::onCategorySelected,
@@ -140,8 +145,17 @@ fun TodayScreen(
     onCategorySelected: (NewsCategory?) -> Unit,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
+    onUseOwnKey: () -> Unit = {},
 ) {
     val tourTargets = LocalTourTargets.current
+    // Every error offers one action; this is where each kind goes.
+    val onErrorAction: (ErrorAction) -> Unit = { action ->
+        when (action) {
+            ErrorAction.TryAgain -> onRetry()
+            ErrorAction.UseBuiltInKey -> onUseBuiltInKey()
+            ErrorAction.UseOwnKey -> onUseOwnKey()
+        }
+    }
     Column(modifier = modifier.fillMaxSize()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -189,10 +203,20 @@ fun TodayScreen(
                         modifier = Modifier.tourTarget(tourTargets, TourStep.Topics),
                     )
                 }
-                if (uiState.ownKeyRefreshRejected()) {
-                    item(key = "own-key") {
-                        OwnKeyRejectedNotice(
-                            onUseBuiltInKey = onUseBuiltInKey,
+                val refreshProblem = uiState.fixableRefreshProblem()
+                if (refreshProblem != null) {
+                    item(key = "refresh-problem") {
+                        RefreshProblemNotice(
+                            icon = refreshProblem.icon,
+                            text = stringResource(
+                                if (refreshProblem.action == ErrorAction.UseOwnKey) {
+                                    R.string.rate_limited_refresh_failed
+                                } else {
+                                    R.string.own_key_refresh_failed
+                                },
+                            ),
+                            actionLabel = stringResource(refreshProblem.action.labelRes()),
+                            onAction = { onErrorAction(refreshProblem.action) },
                             modifier = Modifier.padding(start = EsSpace.screen, end = EsSpace.screen, bottom = EsSpace.s16),
                         )
                     }
@@ -200,8 +224,7 @@ fun TodayScreen(
                 feedItems(
                     uiState = uiState,
                     onArticleClick = onArticleClick,
-                    onRetry = onRetry,
-                    onUseBuiltInKey = onUseBuiltInKey,
+                    onErrorAction = onErrorAction,
                     onRetryLoadMore = onRetryLoadMore,
                     onCategorySelected = onCategorySelected,
                     leadModifier = Modifier.tourTarget(tourTargets, TourStep.LeadStory),
@@ -214,8 +237,7 @@ fun TodayScreen(
 private fun LazyListScope.feedItems(
     uiState: TodayUiState,
     onArticleClick: (Article) -> Unit,
-    onRetry: () -> Unit,
-    onUseBuiltInKey: () -> Unit,
+    onErrorAction: (ErrorAction) -> Unit,
     onRetryLoadMore: () -> Unit,
     onCategorySelected: (NewsCategory?) -> Unit,
     leadModifier: Modifier,
@@ -225,15 +247,13 @@ private fun LazyListScope.feedItems(
         FeedStatus.Loading -> item(key = "skeleton") { StorySkeleton(itemModifier.animateStoryItem(this)) }
 
         is FeedStatus.Failed -> item(key = "error") {
-            val message = status.error.toErrorMessage()
-            // Retrying a rejected key of the reader's own would only fail again.
-            val ownKeyRejected = status.error == AppError.Unauthorized && uiState.usingOwnKey
+            val message = status.error.toErrorMessage(uiState.usingOwnKey)
             EsMessage(
                 icon = message.icon,
                 title = stringResource(message.title),
-                body = stringResource(if (ownKeyRejected) R.string.error_own_key_body else message.body),
-                actionLabel = stringResource(if (ownKeyRejected) R.string.use_builtin_key else R.string.try_again),
-                onAction = if (ownKeyRejected) onUseBuiltInKey else onRetry,
+                body = stringResource(message.body),
+                actionLabel = stringResource(message.action.labelRes()),
+                onAction = { onErrorAction(message.action) },
                 modifier = itemModifier.animateStoryItem(this),
             )
         }
@@ -278,9 +298,12 @@ private fun LazyListScope.feedItems(
 }
 
 
-// Stories from earlier are still showing, but the reader's own key was just turned down.
-private fun TodayUiState.ownKeyRefreshRejected(): Boolean =
-    usingOwnKey && (lastRefresh as? RefreshOutcome.Failed)?.error == AppError.Unauthorized
+// Stories from earlier are still showing, but the refresh failed in a way the reader can fix (their own
+// key was turned down, or the free requests ran out). Plain failures just get the status line.
+private fun TodayUiState.fixableRefreshProblem(): ErrorMessage? {
+    val error = (lastRefresh as? RefreshOutcome.Failed)?.error ?: return null
+    return error.toErrorMessage(usingOwnKey).takeIf { it.action != ErrorAction.TryAgain }
+}
 
 @Composable
 private fun TodayHeading(uiState: TodayUiState, onRefresh: () -> Unit) {
@@ -341,7 +364,10 @@ private fun statusLine(uiState: TodayUiState): String? {
             } else {
                 stringResource(R.string.status_no_new_stories, updated)
             }
-        is RefreshOutcome.Failed -> stringResource(R.string.status_refresh_failed, updated)
+        is RefreshOutcome.Failed -> stringResource(
+            if (refresh.error == AppError.RateLimited) R.string.status_refresh_rate_limited else R.string.status_refresh_failed,
+            updated,
+        )
     }
 }
 
