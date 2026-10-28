@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- LeakCanary's "Leaks" icon is a second launcher activity in our package, so monkey runs
+         kept opening it. Leaks still show in logcat and the notification. Read by LeakCanary. -->
+    <bool name="leak_canary_add_launcher_icon" tools:ignore="UnusedResources">false</bool>
+</resources>

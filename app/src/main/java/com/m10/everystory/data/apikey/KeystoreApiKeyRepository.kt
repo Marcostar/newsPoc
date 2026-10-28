@@ -17,11 +17,14 @@ private const val PREF_OWN_KEY = "own_api_key"
 
 // SharedPreferences rather than DataStore: the OkHttp interceptor needs the key synchronously on
 // its own thread, and DataStore would mean runBlocking there. Only the encrypted form is stored.
+// The file is opened on first use, off the main thread (StrictMode flagged opening it in the factory).
 class KeystoreApiKeyRepository(
-    private val preferences: SharedPreferences,
+    openPreferences: () -> SharedPreferences,
     private val cipher: KeystoreCipher,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ApiKeyRepository {
+
+    private val preferences by lazy(openPreferences)
 
     private val key = MutableStateFlow<String?>(null)
     private var loaded = false

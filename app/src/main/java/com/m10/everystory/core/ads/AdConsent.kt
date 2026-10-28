@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AdConsent(context: Context) {
 
     private val appContext = context.applicationContext
+    // StrictMode flags a disk read here: UMP loading its stored consent. Google's API is main-thread
+    // only and the answer is needed before the first frame, so it stays.
     private val consentInformation: ConsentInformation = UserMessagingPlatform.getConsentInformation(appContext)
     private val adsStarted = AtomicBoolean(false)
 

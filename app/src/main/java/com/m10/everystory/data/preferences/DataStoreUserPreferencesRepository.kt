@@ -25,8 +25,11 @@ private val NOTIFICATION_PERMISSION_ASKED = booleanPreferencesKey("notification_
 private val TOUR_SEEN = booleanPreferencesKey("tour_seen")
 private val LISTEN_RATE = floatPreferencesKey("listen_rate")
 
+// englishOnly pins the news language for automated runs (Firebase Test Lab): other languages
+// cost an extra sources request per feed, and crawlers would burn the free quota switching them.
 class DataStoreUserPreferencesRepository(
     private val dataStore: DataStore<Preferences>,
+    private val englishOnly: Boolean = false,
 ) : UserPreferencesRepository {
 
     // Stored by name; an unknown value from an older build falls back to following the system.
@@ -48,10 +51,11 @@ class DataStoreUserPreferencesRepository(
 
     // Stored as NewsAPI's code; a language dropped from the list falls back to English.
     override val newsLanguage: Flow<NewsLanguage> = dataStore.data.map { prefs ->
-        NewsLanguage.fromCode(prefs[NEWS_LANGUAGE])
+        if (englishOnly) NewsLanguage.English else NewsLanguage.fromCode(prefs[NEWS_LANGUAGE])
     }
 
     override suspend fun setNewsLanguage(language: NewsLanguage) {
+        if (englishOnly) return
         dataStore.edit { it[NEWS_LANGUAGE] = language.code }
     }
 

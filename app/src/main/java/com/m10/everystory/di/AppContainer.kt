@@ -3,6 +3,7 @@ package com.m10.everystory.di
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.net.ConnectivityManager
+import android.provider.Settings
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
@@ -138,9 +139,15 @@ class DefaultAppContainer(
         Room.databaseBuilder(context, EveryStoryDatabase::class.java, DATABASE_FILE).build()
     }
 
+    private val isTestLab: Boolean by lazy {
+        isFirebaseTestLab(context).also { testLab ->
+            if (testLab) Timber.i("Firebase Test Lab: English news only, analytics off")
+        }
+    }
+
     override val apiKeyRepository: ApiKeyRepository by lazy {
         KeystoreApiKeyRepository(
-            preferences = context.getSharedPreferences(API_KEY_FILE, Context.MODE_PRIVATE),
+            openPreferences = { context.getSharedPreferences(API_KEY_FILE, Context.MODE_PRIVATE) },
             cipher = KeystoreCipher(API_KEY_ALIAS),
         )
     }
@@ -172,11 +179,14 @@ class DefaultAppContainer(
     }
 
     override val userPreferencesRepository: UserPreferencesRepository by lazy {
-        DataStoreUserPreferencesRepository(preferences)
+        DataStoreUserPreferencesRepository(preferences, englishOnly = isTestLab)
     }
 
+    // Robo and monkey runs would otherwise show up in Analytics as real readers.
     override val analyticsTracker: AnalyticsTracker by lazy {
-        FirebaseAnalyticsTracker(FirebaseAnalytics.getInstance(context))
+        val analytics = FirebaseAnalytics.getInstance(context)
+        analytics.setAnalyticsCollectionEnabled(!isTestLab)
+        FirebaseAnalyticsTracker(analytics)
     }
 
     override val adConsent: AdConsent by lazy { AdConsent(context) }
@@ -212,3 +222,7 @@ class DefaultAppContainer(
             redactHeader(API_KEY_HEADER)
         }
 }
+
+// Test Lab sets this on its devices (documented by Firebase), so crawler runs can be told apart.
+private fun isFirebaseTestLab(context: Context): Boolean =
+    Settings.System.getString(context.contentResolver, "firebase.test.lab") == "true"
