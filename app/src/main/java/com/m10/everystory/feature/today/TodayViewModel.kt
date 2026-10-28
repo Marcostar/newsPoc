@@ -25,7 +25,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
+
+// How long a cached feed counts as current when Today opens it.
+private val FRESH_FOR: Duration = Duration.ofMinutes(15)
 
 class TodayViewModel(
     private val newsRepository: NewsRepository,
@@ -159,18 +163,24 @@ class TodayViewModel(
             // Offline-first: show this feed as it was last time straight away, then check for new stories.
             val cached = newsRepository.cachedHeadlines(category = state.selectedCategory, language = state.newsLanguage)
             if (cached != null) {
+                // A feed fetched a few minutes ago is still news; don't spend a request (the free plan
+                // allows 50 per 12 hours) just because the app was reopened or a topic tapped again.
+                // Refresh and pull to refresh always ask NewsAPI.
+                val isFresh = Duration.between(cached.updatedAt, now()) < FRESH_FOR
                 currentPage = 1
                 _uiState.update {
                     it.copy(
                         isLaunching = false,
                         articles = cached.articles,
                         feedStatus = FeedStatus.Loaded,
-                        isRefreshing = true,
+                        isRefreshing = !isFresh,
                         updatedAt = cached.updatedAt,
                         loadMore = LoadMoreState.Idle,
                     )
                 }
-                refreshFirstPage(state.selectedCategory, state.newsLanguage, cached.articles.mapTo(HashSet()) { it.key })
+                if (!isFresh) {
+                    refreshFirstPage(state.selectedCategory, state.newsLanguage, cached.articles.mapTo(HashSet()) { it.key })
+                }
                 return@launch
             }
             when (val result = newsRepository.topHeadlines(page = 1, category = state.selectedCategory, language = state.newsLanguage)) {

@@ -85,6 +85,36 @@ class TodayViewModelTest {
     }
 
     @Test
+    fun `a feed cached minutes ago is shown without asking NewsAPI`() = runTest {
+        val cachedAt = fixedNow.minusSeconds(5 * 60)
+        repository.cachedFeeds[null to NewsLanguage.English] = CachedHeadlines(listOf(testArticle("a")), cachedAt)
+
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertTrue(repository.headlineRequests.isEmpty())
+        assertEquals(listOf("a"), state.articles.map { it.key })
+        assertEquals(cachedAt, state.updatedAt)
+        assertFalse(state.isRefreshing)
+    }
+
+    @Test
+    fun `refresh still asks NewsAPI when the cached feed is fresh`() = runTest {
+        repository.cachedFeeds[null to NewsLanguage.English] =
+            CachedHeadlines(listOf(testArticle("a")), fixedNow.minusSeconds(60))
+        repository.headlineResults += testPage(1, listOf("b", "a"))
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onRefresh()
+        advanceUntilIdle()
+
+        assertEquals(listOf(1 to null), repository.headlineRequests)
+        assertEquals(listOf("b", "a"), viewModel.uiState.value.articles.map { it.key })
+    }
+
+    @Test
     fun `cached feed stays on screen when the network fails`() = runTest {
         val cachedAt = Instant.parse("2026-10-26T07:00:00Z")
         repository.cachedFeeds[null to NewsLanguage.English] = CachedHeadlines(listOf(testArticle("a")), cachedAt)
