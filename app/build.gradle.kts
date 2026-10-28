@@ -14,6 +14,8 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use(::load)
 }
 val newsApiKey: String = localProperties.getProperty("NEWS_API_KEY", "")
+// Keystore lives outside the repo; without these lines release builds come out unsigned.
+val releaseStoreFile: String? = localProperties.getProperty("RELEASE_STORE_FILE")
 
 android {
     namespace = "com.m10.everystory"
@@ -35,8 +37,20 @@ android {
         buildConfigField("String", "NEWS_API_KEY", "\"$newsApiKey\"")
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             // Default package scope ("**") so our own code is shrunk and obfuscated too.
             optimization {
                 enable = true
