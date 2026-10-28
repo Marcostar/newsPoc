@@ -112,15 +112,9 @@ screen is never cleared by a failed refresh.
 ## Analytics
 
 Everything goes through `core/analytics/AnalyticsTracker` (Firebase implementation in the app, a fake
-in tests), and every event is listed in `AnalyticsEvent`:
-
-`screen_view`, `search`, `topic_select`, `feed_refresh`, `load_error`, `story_open`, `story_save`,
-`story_unsave`, `story_link_out`, `listen_start`, `theme_change`, `text_size_change`,
-`language_change`, `tour_complete`, `tour_skip`, `own_api_key`, `reminder_open`, `ad_impression`,
-`banner_click`, `profile_open`.
-
-Search terms are sent to Analytics but never written to the log. Collection is switched off on
-Firebase Test Lab devices so automated runs don't count as readers.
+in tests). Every event and its parameters are listed in one place, `AnalyticsEvent`: screen views,
+search, topic changes, refresh, load errors, opening and saving stories, opening the original article,
+and settings.
 
 ## Testing
 
@@ -128,7 +122,7 @@ Firebase Test Lab devices so automated runs don't count as readers.
 ./gradlew testDebugUnitTest
 ```
 
-- **160 unit tests**: every ViewModel (Turbine + `runTest`), use cases, mappers, formatters, and the
+- **Unit tests** for every ViewModel (Turbine + `runTest`), use cases, mappers, formatters, and the
   repository against `MockWebServer` (401, 429, 5xx, 426, timeout, offline). Hand-written fakes in
   `testing/`, no mocking library.
 - **Monkey stress test** (`MonkeyStressTest`, instrumentation): runs Android's monkey against the app and
@@ -140,12 +134,10 @@ Firebase Test Lab devices so automated runs don't count as readers.
     --test app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
     --device model=MediumPhone.arm,version=26 --device model=MediumPhone_ps16k.arm,version=37
   ```
-  Last run: 3,000 events each on Android 8.0 and Android 17, plus a Robo crawl on both. No crashes,
-  ANRs or leaks.
 - **StrictMode** (debug builds) logs main-thread disk and network access; **LeakCanary** (debug only)
   watches for leaks.
-- The release build was smoke-tested on a Pixel 10 Pro XL (feed, search, story, link out, save,
-  read aloud, rotation, process death, errors).
+- The release build was smoke-tested on a phone: feed, search, story, link out, save, read aloud,
+  rotation, process death and errors.
 
 ## Things worth knowing
 
@@ -155,9 +147,8 @@ Firebase Test Lab devices so automated runs don't count as readers.
   own NewsAPI key) to enter your own key. It's checked with NewsAPI before saving and stored
   encrypted with the Android Keystore.
 - **And one more.** Tap the version row under You three times.
-- **The key is in the APK.** The published APK carries a NewsAPI key in its code, which anyone can
-  extract. Fine for a demo; a real release would put a small backend proxy in front of NewsAPI so no
-  key ships in the app (plus App Check and per-user rate limits).
+- **Production next step.** A real release would put a small backend in front of NewsAPI, so no key
+  ships in the app, with App Check and per-user rate limits.
 - **Other languages.** On the free plan `top-headlines` only returns English by language, so German,
   French and Arabic headlines come from each language's outlets instead.
 - **Ads** use Google's sample IDs. Debug builds pretend to be in the EEA so the consent form always
